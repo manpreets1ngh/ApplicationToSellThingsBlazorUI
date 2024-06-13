@@ -1,0 +1,395 @@
+﻿@page "/Orders/PlaceOrder"
+@attribute [Authorize]
+@attribute [Authorize(Roles = "User")]
+
+@using ApplicationToSellThings.BlazorUI.Helper;
+@using ApplicationToSellThings.BlazorUI.Models.Orders;
+@using ApplicationToSellThings.BlazorUI.Models.Products;
+@using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Services;
+@using ApplicationToSellThings.BlazorUI.Store.Action;
+@inject NavigationManager NavigationManager
+@inject IProductsService ProductService
+@inject IAddressService AddressService
+@inject ICardService CardService
+@inject IOrderService OrderService
+@inject IState<AuthState> AuthState
+@inject IDispatcher Dispatcher
+@inject IState<CheckoutState> CheckoutState
+@inject UserDetailHelper UserHelper
+@inject NotificationService Notification
+
+<h3>Checkout</h3>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+        <p class="text-danger">@errorMessage</p>
+}
+<section class="gradient-custom">
+    <div class="container py-5 h-100">
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="form-check mb-3">
+                    <h5>Delivery Address</h5>
+                    <div class="row">
+                        <div class="col-8 custom-select-wrapper">
+                            <MudSelect T="AddressViewModel" Label="Select your address" ValueChanged="@OnAddressSelected">
+                                @if (Addresses.Any())
+                                {
+                                    foreach (var address in Addresses)
+                                    {
+                                        <MudSelectItem Value="@address">@address.Street, @address.City, @address.Country</MudSelectItem>
+                                    }
+                                }
+                                else
+                                {
+                                    <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewAddressSelected">Add Delivery Address</MudButton>
+                                }
+                            </MudSelect>
+                            @if (showAddNewAddress)
+                            {
+                                <EditForm Model="newAddress" OnValidSubmit="HandleAddNewAddress">
+                                    <MudTextField id="street" @bind-Value="newAddress.Street" Class="mt-2" Label="Street" For="@(() => newAddress.Street)" />
+                                    <MudTextField id="city" @bind-Value="newAddress.City" class="form-control" Label="City" For="@(() => newAddress.City)" />
+                                    <MudTextField id="state" @bind-Value="newAddress.State" class="form-control" Label="State" For="@(() => newAddress.State)" />
+                                    <MudTextField id="postcode" @bind-Value="newAddress.PostCode" class="form-control" Label="Post Code" For="@(() => newAddress.PostCode)" />
+                                    <MudTextField id="country" @bind-Value="newAddress.Country" class="form-control" Label="Country" For="@(() => newAddress.Country)" />
+                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save Address</MudButton>
+                                </EditForm>
+                            }
+
+                        </div>
+                    </div>
+                    <br/>
+                    <br/>
+                    <h5>Payment Method</h5>
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="btn-group" role="group" aria-label="Payment Method">
+                                <button type="button"
+                                        class="btn @(paymentOption == "cash" ? "btn-primary" : "btn-outline-primary")"
+                                        @onclick="SetPaymentOptionToCash">
+                                    Pay by Cash
+                                </button>
+                                <button type="button"
+                                        class="btn @(paymentOption == "card" ? "btn-primary" : "btn-outline-primary")"
+                                        @onclick="SetPaymentOptionToCard">
+                                    Pay by Card
+                                </button>
+                            </div>
+                        </div>                     
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            @if (CheckoutState.Value.PaymentOption == "card")
+                            {
+                                <MudSelect T="CardDetail" Label="Select Card" ValueChanged="@OnCardSelected">
+                                    @if (CardDetails.Any())
+                                    {
+                                        foreach (var card in CardDetails)
+                                        {
+                                            <MudSelectItem Value="@card">@($"**** **** **** {card.CardNumber.Substring(card.CardNumber.Length - 4)}")</MudSelectItem>
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewCardForPayment">Add New Card</MudButton>
+
+
+                                    }
+                                </MudSelect>
+
+                                @if (showAddNewCard)
+                                {
+                                    <EditForm Model="newCardDetails" OnValidSubmit="HandleAddCard">
+                                        <MudTextField id="cardholdername" @bind-Value="newCardDetails.CardHolderName" class="form-control" Label="CardHolder Name" For="@(() => newCardDetails.CardHolderName)" />
+                                        <MudTextField id="cardnumber" @bind-Value="newCardDetails.CardNumber" class="form-control" Label="Card Number" For="@(() => newCardDetails.CardNumber)" />
+                                        <MudTextField id="expirydate" @bind-Value="newCardDetails.ExpiryDate" class="form-control" Label="Expiry Date" For="@(() => newCardDetails.ExpiryDate)" />
+                                        <MudTextField id="cvv" @bind-Value="newCardDetails.Cvv" class="form-control" Label="Cvv" For="@(() => newCardDetails.Cvv)" />
+                                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save Card</MudButton>
+                                    </EditForm>
+                                }
+
+                            }
+                            else if (CheckoutState.Value.PaymentOption == "cash")
+                            {
+                                <div>
+                                    <p>You have chosen to pay by cash. No further information is required.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <br>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                @if (CheckoutState.Value.SelectedProduct != null)
+                {
+                    <div class="card">
+                        <div class="card-body" style="margin: 10px 10px 10px 10px;">
+                            <h4 class="card-title">@CheckoutState.Value.SelectedProduct.ProductName</h4>
+                            <div class="row">
+                                <div class="col-8">
+                                    <h5>Price:</h5>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <strong>£@CheckoutState.Value.SelectedProduct.Price.ToString()</strong>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-10">
+                                    <h5 class="mt-5" for="quantity">Quantity:</h5>
+                                </div>
+                                <div class="col-2 text-center">
+                                    <MudSelect T="int" Class="mb-1" ValueChanged="@UpdateQuantity">
+                                        @foreach(var quantity in GenerateQuantityOptions())
+                                        {
+                                            <MudSelectItem Value="@quantity">@quantity</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-8">
+                                    <h4>Total:</h4>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <h5>@(CheckoutState.Value.TotalPrice.ToString("C"))</h5>
+                                </div>
+                            </div>
+                            <br/>
+                            <MudButton Color="Color.Secondary" @onclick="HandlePlaceOrder" disabled="@(!CheckoutState.Value.IsOrderReady)">
+                                Checkout
+                            </MudButton>
+                        </div>
+                    </div>                   
+                }
+                else
+                {
+                    <p>Product details are loading...</p>
+                }
+
+            </div>            
+        </div>        
+    </div>
+</section>
+
+@code {
+    private ProductViewModel ProductViewModel { get; set; }
+    private string errorMessage = string.Empty;
+    private AddressViewModel selectedAddress;
+    private List<AddressViewModel> Addresses = new List<AddressViewModel>();
+    private AddressRequestModel newAddress = new AddressRequestModel();
+    private bool showAddNewAddress = false;
+    private bool showDropdownAddresses = false;
+    private bool showDropdownCards = false;
+    private Guid UserId;
+    private string paymentOption = "cash";
+    private List<CardDetail> CardDetails = new List<CardDetail>();
+    private CardDetail selectedCard;
+    private Guid? selectedCardId;
+    private bool showAddNewCard = false;
+    private CardRequestModel newCardDetails = new CardRequestModel();
+    private OrderRequestModel OrderRequest = new OrderRequestModel();
+    private int AvailableQuantityForTheProduct;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(AuthState.Value.IsAuthenticated)
+        {   
+            CheckoutState.StateChanged += StateHasChanged;
+
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+            // Assuming the parameter passed is named 'productId'
+            if (query.TryGetValue("productId", out var productId) && !string.IsNullOrWhiteSpace(productId))
+            {
+                try
+                {
+                    var id = Guid.Parse(productId);
+                    Dispatcher.Dispatch(new FetchProductAction(id));
+                    var product = await ProductService.GetProductByProductId(id);
+                    if(product != null)
+                    {
+                        AvailableQuantityForTheProduct = product.QuantityInStock;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle any errors that occur during fetching
+                    errorMessage = $"Error fetching product details: {ex.Message}";
+                }
+            }
+            else
+            {
+                errorMessage = "Product ID not specified.";
+            }
+
+            var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+            UserId = Guid.Parse(userDetail.Id);
+
+            Dispatcher.Dispatch(new FetchAddressesForUserAction(UserId));
+            Dispatcher.Dispatch(new FetchCardsForUserAction(UserId));
+
+            Addresses ??= new List<AddressViewModel>(); 
+
+        }        
+    }
+
+    private async Task OnAddressSelected(AddressViewModel address)
+    {
+        selectedAddress = address;
+        showDropdownAddresses = false; // Ensure the dropdown closes
+        Dispatcher.Dispatch(new SetSelectedAddressAction(address)); // Update state
+        StateHasChanged();
+    }
+
+    private async Task OnCardSelected(CardDetail card)
+    {
+        selectedCard = card;
+        selectedCardId = card.CardId;
+        showDropdownCards = false; // Ensure the dropdown closes
+        Dispatcher.Dispatch(new SetSelectedCardAction(card)); // Update state
+        StateHasChanged();
+    }
+
+    private void AddNewAddressSelected()
+    {
+        showAddNewAddress = true;
+    }
+
+    private void AddNewCardForPayment()
+    {
+        showAddNewCard = true;
+    }
+
+    private void ToggleDropdown()
+    {
+        showDropdownAddresses = !showDropdownAddresses;
+        Console.WriteLine($"Dropdown State: {showDropdownAddresses}"); // Debug output
+
+        StateHasChanged();
+    }
+
+
+    private void StateHasChanged(object sender, EventArgs e)
+    {
+        Addresses = CheckoutState.Value.Addresses.ToList();
+        CardDetails = CheckoutState.Value.CardDetails.ToList();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        CheckoutState.StateChanged -= StateHasChanged;
+    }
+
+    private async Task HandleAddNewAddress()
+    {
+        var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+
+        var addressRequest = new AddressRequestModel
+            {
+                UserId = userDetail.Id,
+                Street = newAddress.Street,
+                City = newAddress.City,
+                State = newAddress.State,
+                PostCode = newAddress.PostCode,
+                Country = newAddress.Country
+            };
+
+        Dispatcher.Dispatch(new AddNewAddressAction(addressRequest));
+        showAddNewAddress = false;
+        StateHasChanged();
+    }
+
+    private void SetPaymentOptionToCash()
+    {
+        Dispatcher.Dispatch(new SetPaymentOptionAction("cash"));
+    }
+
+    private void SetPaymentOptionToCard()
+    {
+        Dispatcher.Dispatch(new SetPaymentOptionAction("card"));
+    }
+
+    private void ToggleAddNewCard()
+    {
+        showAddNewCard = !showAddNewCard; // Toggles the visibility of the add new card form
+    }
+
+    // Method to generate quantity options based on available quantity
+    private List<int> GenerateQuantityOptions()
+    {
+        List<int> options = new List<int>();
+        for (int i = 1; i <= AvailableQuantityForTheProduct; i++)
+        {
+            options.Add(i);
+        }
+        return options;
+    }
+
+
+    private void UpdateQuantity(int newQuantity)
+    {
+        Dispatcher.Dispatch(new UpdateProductQuantityAction(newQuantity));
+    }
+
+    private async Task HandleAddCard()
+    {
+        var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+        var cardRequest = new CardRequestModel
+            {
+                UserId = userDetail.Id,
+                CardHolderName = newCardDetails.CardHolderName,
+                CardNumber = newCardDetails.CardNumber,
+                ExpiryDate = newCardDetails.ExpiryDate,
+                Cvv = newCardDetails.Cvv
+            };
+
+        // Logic to call a service and add the new card
+        Dispatcher.Dispatch(new AddNewCardAction(cardRequest));
+        showAddNewCard = false;
+        StateHasChanged();
+    }
+
+
+    private async Task HandlePlaceOrder()
+    {
+        OrderRequest = new OrderRequestModel
+            {
+                UserId = UserId,
+                ProductId = CheckoutState.Value.SelectedProduct.ProductId,
+                CardId = CheckoutState.Value.SelectedCard.CardId,
+                ShippingAddressId = CheckoutState.Value.SelectedAddress.Id,
+                PaymentMethod = CheckoutState.Value.PaymentOption,
+                Quantity = CheckoutState.Value.Quantity
+            };
+
+        var order = await OrderService.PlaceOrder(OrderRequest);
+        if(order != null)
+        {
+            Notification.Notify(new NotificationModel
+                {
+                    Message = $"Your order for product {CheckoutState.Value.SelectedProduct.ProductName} has been placed successfully...",
+                    Type = NotificationMessageType.Success
+                });
+
+            NavigationManager.NavigateTo("/orders");
+            StateHasChanged();
+        }
+        else
+        {
+            Notification.Notify(new NotificationModel
+                {
+                    Message = $"Something is wrong with the order placed",
+                    Type = NotificationMessageType.Error
+                });
+
+            StateHasChanged();
+        }
+    }
+}

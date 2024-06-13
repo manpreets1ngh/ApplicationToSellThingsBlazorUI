@@ -1,0 +1,146 @@
+﻿@page "/auth/login"
+@using ApplicationToSellThings.BlazorUI.Helper;
+@using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Services;
+@using ApplicationToSellThings.BlazorUI.Store.Action;
+@using System.IdentityModel.Tokens.Jwt;
+@using Microsoft.AspNetCore.WebUtilities;
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IAuthService AuthService
+@inject NotificationService NotificationService
+@inject IDispatcher Dispatcher
+@inject UserDetailHelper UserDetailHelper
+
+@if (IsLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <section class="gradient-custom">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+                    <div class="card" style="border-radius: 2rem;">
+                        <div class="card-body p-5 text-center">
+
+                            <div class="mb-3 mt-md-4">
+                                <h5 class="fw-bold mb-5">Sign In to your account</h5>
+
+                                <EditForm Model="@LoginUser" OnValidSubmit="HandleLogin">
+                                    <DataAnnotationsValidator />
+                                    <div class="form-group floating-label">
+                                        <InputText @bind-Value="LoginUser.Email" id="typeEmailX" class="form-control floating-input" placeholder=" " />
+                                        <ValidationMessage For="@(() => LoginUser.Email)" class="row text-danger px-3" />
+                                    </div>
+
+                                    <div class="form-group floating-label mt-3">
+                                        <InputText @bind-Value="LoginUser.Password" type="password" id="typePasswordX" class="form-control floating-input" placeholder=" " />
+                                        <ValidationMessage For="@(() => LoginUser.Password)" class="row text-danger px-3" />
+                                    </div>
+
+                                    <p class="small mb-4 pb-lg-2"><a href="#!">Forgot password?</a></p>
+
+                                    <button class="btn-signin px-5 py-2" type="submit" value="Sign In">Sign In</button>
+                                </EditForm>
+
+                            </div>
+                            <div class="row d-flex justify-content-center">
+                                <p>
+                                    Don't have an account? <a href="/auth/register" class="">Register</a>
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+
+@code {
+    private bool IsLoading = false;
+    private LoginUser LoginUser = new LoginUser();
+    private string errorMessage = string.Empty;
+    private string returnUrl = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var url))
+        {
+            returnUrl = url.FirstOrDefault();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task HandleLogin()
+    {
+        IsLoading = true;
+        var result = await AuthService.UserLogin(LoginUser);
+        if(result != null)
+        {
+            var token = result.Data;
+            var userRoles = result.Items;
+            var userDetail = UserDetailHelper.GetUserDetailFromToken(token);
+
+            Dispatcher.Dispatch(new LoginAction(token, userDetail.UserName, userDetail.Email, userRoles));
+
+            if (result.Status == "Success" && result.StatusCode == 200)
+            {
+
+                NotificationService.Notify(new NotificationModel
+                    {
+                        Message = "Logged in successfully",
+                        Type = NotificationMessageType.Success
+                    });
+
+                if (!string.IsNullOrWhiteSpace(returnUrl))
+                {
+                    NavigationManager.NavigateTo(returnUrl);
+                }
+                else
+                {
+                    if (userRoles.Contains("Admin"))
+                    {
+                        NavigationManager.NavigateTo("/Admin/Dashboard");
+                    }
+
+                    if (userRoles.Contains("User"))
+                    {
+                        NavigationManager.NavigateTo("/"); // Or to a default post-login page
+                    }
+
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationModel
+                    {
+                        Message = "Unable to Login...",
+                        Type = NotificationMessageType.Error
+                    });
+            }
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationModel
+                {
+                    Message = "Internal Server error",
+                    Type = NotificationMessageType.Error
+                });
+        }
+
+        StateHasChanged();
+
+    }
+
+    
+}

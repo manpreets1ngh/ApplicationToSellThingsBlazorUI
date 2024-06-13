@@ -1,0 +1,94 @@
+﻿@page "/productdetails/{productId}"
+
+@using ApplicationToSellThings.BlazorUI.Models.Products;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@inject IProductsService ProductsService
+@inject IState<AuthState> AuthState
+@inject NavigationManager NavigationManager
+@if (product == null)
+{
+    <p><em>Loading product details...</em></p>
+}
+else
+{
+    <section class="gradient-custom">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="row m-0">
+                    <div class="col-lg-4 left-side-product-box pb-3">
+                        <span class="sub-img">
+
+                        </span>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="right-side-pro-detail p-3 m-0">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <h4 class="m-0 p-0">@product.ProductName</h4>
+                                </div>
+                                <div class="col-lg-12 mt-3 mb-2">
+                                    <h5 class="m-0 p-0">@product.BrandName</h5>
+                                    <hr class="p-0 mb-2">
+                                </div>
+                                <div class="col-lg-12">
+                                    <h6 class="m-0 p-0 price-pro">£@product.Price</h6>
+                                </div>
+                                <div class="col-lg-12 mt-3">
+                                    <h5>Product Description</h5>
+                                    <span>
+                                        @product.Description
+                                    </span>
+                                </div>
+                                <div class="col-lg-12 mt-5">
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <a id="redirectLink" href="#" style="display:none;"></a>
+
+                                            <button type="button" class="btn-placeorder btn-outline-secondary px-4 py-2" style="border-radius: 2rem;" @onclick="HandlePlaceOrder">
+                                                Place Order
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public string ProductId { get; set; }
+
+    private ProductViewModel? product;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Guid.TryParse(ProductId, out var id))
+        {
+            product = await ProductsService.GetProductByProductId(id);
+        }
+        else
+        {
+            // Handle invalid ID, potentially navigate back or show an error
+            NavigationManager.NavigateTo("/products");
+        }
+    }
+
+    private void HandlePlaceOrder()
+    {
+        if(AuthState.Value.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo($"/Orders/PlaceOrder?productId={ProductId}");
+        }
+        else
+        {
+            // User is not authenticated, navigate to Login page
+            // Include a returnUrl parameter to navigate back after login
+            NavigationManager.NavigateTo($"/auth/login?returnUrl={Uri.EscapeDataString($"/Orders/PlaceOrder?productId={ProductId}")}");
+        }
+    }
+}

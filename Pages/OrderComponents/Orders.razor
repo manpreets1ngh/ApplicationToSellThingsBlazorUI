@@ -1,0 +1,74 @@
+﻿@page "/orders"
+@using ApplicationToSellThings.BlazorUI.Helper;
+@using ApplicationToSellThings.BlazorUI.Models.Orders;
+@using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Services;
+@inject IOrderService OrderService
+@inject IState<AuthState> AuthState
+@inject UserDetailHelper UserHelper
+@inject NotificationService Notification
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger">@errorMessage</p>
+}
+<section class="gradient-custom">
+    <div class="container py-5 h-100">
+        <div class="row">
+
+            <MudTable Items="@OrdersList.Take(4)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+                <HeaderContent>
+                    <MudTh>OrderId</MudTh>
+                    <MudTh>Product Name</MudTh>
+                    <MudTh>Product Price</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Total</MudTh>
+                    <MudTh>Order Status</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
+                    @foreach (var orderDetail in context.OrderDetails)
+                    {
+                        <MudTd DataLabel="ProductName">@orderDetail.Product.ProductName</MudTd>
+                        <MudTd DataLabel="ProductName">@orderDetail.Product.Price</MudTd>
+                        <MudTd DataLabel="Quantity">@orderDetail.Quantity</MudTd>
+                    }
+                    <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
+                    <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </div>
+    </div>
+</section>
+
+
+@code {
+    private string errorMessage = string.Empty;
+    private List<Order> OrdersList { get; set; }
+    private bool _loading;
+    private Guid userId;
+    private string productName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.Value.IsAuthenticated)
+        {
+            var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+            userId = Guid.Parse(userDetail.Id);
+
+            OrdersList = await OrderService.GetOrdersListForUser(userId);
+            if(OrdersList.Count > 0 || OrdersList != null)
+            {
+                Notification.Notify(new NotificationModel
+                    {
+                        Message = $"Your orders List",
+                        Type = NotificationMessageType.Success
+                    });
+
+            }
+        }
+
+        StateHasChanged();
+    }
+}

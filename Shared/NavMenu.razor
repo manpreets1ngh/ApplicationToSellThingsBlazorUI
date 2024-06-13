@@ -1,0 +1,105 @@
+﻿@using Fluxor;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Store.Action;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IState<AuthState> AuthState
+@inject IDispatcher Dispatcher
+
+<nav class="navbar navbar-expand-md mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="">Vision</a>
+        <button class="navbar-toggler @NavButtonCssClass" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-label="Toggle navigation" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse @NavBarCssClass" id="navbarCollapse" @onclick="ToggleNavMenu">
+            <div class="navbar-nav flex-grow-1">
+                @if(AuthState.Value.IsAuthenticated)
+                {
+                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                        @if(AuthState.Value.UserRoles.Contains("Admin"))
+                        {
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="/Admin/Dashboard" Match="NavLinkMatch.All">
+                                    <span class="oi oi-home" aria-hidden="true"></span> Dashboard
+                                </NavLink>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="products" Match="NavLinkMatch.All">
+                                <span class="oi oi-list" aria-hidden="true"></span> Products
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="orders">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Orders
+                            </NavLink>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav flex-grow justify-content-end">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
+                                @AuthState.Value.UserName
+                            </a>
+                            <div class="@DropdownCssClass dropdown-menu" aria-labelledby="navbarDropdown">
+                                <NavLink class="dropdown-item" href="user/profile">Manage Profile</NavLink>
+                                <NavLink class="dropdown-item" href="user/address">Add Address</NavLink>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item" @onclick="Logout">Logout</button>
+                            </div>
+                        </li>
+                    </ul>
+                }                
+                else
+                {
+                    <ul class="navbar-nav flex-grow justify-content-end">
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="account/register">
+                                <span class="oi oi" aria-hidden="true"></span> Register
+                            </NavLink>
+                        </li>
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="/auth/login">
+                                <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                            </NavLink>
+                        </li>
+                    </ul>
+                }
+                
+            </div>            
+        </div>
+    </div>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private bool showDropdown = false;
+    private string? DropdownCssClass => showDropdown ? "show" : null;
+    private string? NavBarCssClass => collapseNavMenu ? null : "show";
+    private string? NavButtonCssClass => collapseNavMenu ? "collapsed" : null;
+    private string userName = "User";
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+        StateHasChanged();
+    }
+
+    private void ToggleDropdown()
+    {
+        showDropdown = !showDropdown;
+    }
+    private Task Logout()
+    {
+        // Implement logout logic here
+        AuthService.SignOutAsync();
+        StateHasChanged();
+        NavigationManager.NavigateTo("/auth/login");
+        return Task.CompletedTask;
+    }
+}
