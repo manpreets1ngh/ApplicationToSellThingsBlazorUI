@@ -369,26 +369,27 @@
                 Quantity = CheckoutState.Value.Quantity
             };
 
-        var order = await OrderService.PlaceOrder(OrderRequest);
+        var order = await OrderService.PlaceOrder(OrderRequest, AuthState.Value.Token);
         if(order != null)
         {
-            Notification.Notify(new NotificationModel
+            var notificationMessage = new NotificationModel
                 {
                     Message = $"Your order for product {CheckoutState.Value.SelectedProduct.ProductName} has been placed successfully...",
                     Type = NotificationMessageType.Success
-                });
+                };
 
-            NavigationManager.NavigateTo("/orders");
+            NavigationManager.NavigateTo("/orders" + Uri.EscapeDataString(notificationMessage.Message));
             StateHasChanged();
         }
         else
         {
-            Notification.Notify(new NotificationModel
+            var notificationMessage = new NotificationModel
                 {
                     Message = $"Something is wrong with the order placed",
                     Type = NotificationMessageType.Error
-                });
-
+                };
+            
+            Notification.Notify(notificationMessage);
             StateHasChanged();
         }
     }

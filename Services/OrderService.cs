@@ -1,8 +1,12 @@
-﻿using ApplicationToSellThing.BlazorUI.Models;
+﻿using System.Net.Http.Headers;
+using ApplicationToSellThing.BlazorUI.Models;
 using ApplicationToSellThings.BlazorUI.Models;
 using ApplicationToSellThings.BlazorUI.Models.Orders;
 using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 using System.Text.Json;
+using ApplicationToSellThings.BlazorUI.Store.State;
+using Fluxor;
+using Microsoft.AspNetCore.Components;
 
 namespace ApplicationToSellThings.BlazorUI.Services
 {
@@ -10,16 +14,18 @@ namespace ApplicationToSellThings.BlazorUI.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly NotificationService _notificationService;
-
-        public OrderService(IHttpClientFactory httpClientFactory, NotificationService notificationService)
+        private readonly IAuthService _authService;
+        public OrderService(IHttpClientFactory httpClientFactory, NotificationService notificationService, IAuthService authService)
         {
             _httpClientFactory = httpClientFactory;
             _notificationService = notificationService;
+            _authService = authService;
         }
 
-        public async Task<OrderResponseViewModel> PlaceOrder(OrderRequestModel orderRequestModel)
+        public async Task<OrderResponseViewModel> PlaceOrder(OrderRequestModel orderRequestModel, string token)
         {
             var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var result = await client.PostAsJsonAsync("/api/Orders", orderRequestModel);
             if (result.IsSuccessStatusCode)
             {

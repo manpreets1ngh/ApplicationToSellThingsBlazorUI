@@ -111,13 +111,19 @@ else
                     {
                         NavigationManager.NavigateTo("/Admin/Dashboard");
                     }
-
-                    if (userRoles.Contains("User"))
+                    else if (userRoles.Contains("User"))
                     {
-                        NavigationManager.NavigateTo("/"); // Or to a default post-login page
+                        NavigationManager.NavigateTo("/products");
                     }
-
-                    StateHasChanged();
+                    else
+                    {
+                        // Handle other roles or unexpected scenarios
+                        NotificationService.Notify(new NotificationModel
+                        {
+                            Message = "Unauthorized access",
+                            Type = NotificationMessageType.Error
+                        });
+                    }
                 }
             }
             else

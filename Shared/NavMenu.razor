@@ -16,34 +16,38 @@
         </button>
         <div class="collapse navbar-collapse @NavBarCssClass" id="navbarCollapse" @onclick="ToggleNavMenu">
             <div class="navbar-nav flex-grow-1">
-                @if(AuthState.Value.IsAuthenticated)
+                @if(AuthStateValue.IsAuthenticated)
                 {
-                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                        @if(AuthState.Value.UserRoles.Contains("Admin"))
-                        {
+                    @if(AuthStateValue.UserRoles.Contains("Admin"))
+                    {
+                        <ul class="navbar-nav me-auto mb-2 mb-md-0">
                             <li class="nav-item">
-                                <NavLink class="nav-link" href="/Admin/Dashboard" Match="NavLinkMatch.All">
-                                    <span class="oi oi-home" aria-hidden="true"></span> Dashboard
+                                <NavLink class="nav-link" href="/admin/dashboard" Match="NavLinkMatch.All">
+                                        <span class="oi oi-home" aria-hidden="true"></span> Dashboard
                                 </NavLink>
                             </li>
-                        }
-
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="products" Match="NavLinkMatch.All">
-                                <span class="oi oi-list" aria-hidden="true"></span> Products
-                            </NavLink>
-                        </li>
-                        <li class="nav-item">
-                            <NavLink class="nav-link" href="orders">
-                                <span class="oi oi-list-rich" aria-hidden="true"></span> Orders
-                            </NavLink>
-                        </li>
-                    </ul>
+                        </ul>
+                    }
+                    else if (AuthStateValue.UserRoles.Contains("User"))
+                    {
+                        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="products" Match="NavLinkMatch.All">
+                                    <span class="oi oi-list" aria-hidden="true"></span> Products
+                                </NavLink>
+                            </li>
+                            <li class="nav-item">
+                                <NavLink class="nav-link" href="orders">
+                                    <span class="oi oi-list-rich" aria-hidden="true"></span> Orders
+                                </NavLink>
+                            </li>
+                        </ul>
+                    }
 
                     <ul class="navbar-nav flex-grow justify-content-end">
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
-                                @AuthState.Value.UserName
+                                @AuthStateValue.UserName
                             </a>
                             <div class="@DropdownCssClass dropdown-menu" aria-labelledby="navbarDropdown">
                                 <NavLink class="dropdown-item" href="user/profile">Manage Profile</NavLink>
@@ -76,6 +80,10 @@
 </nav>
 
 @code {
+    
+    private AuthState AuthStateValue => AuthState.Value;
+
+    private List<string>? UserRoles { get; set; }
     private bool collapseNavMenu = true;
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
     private bool showDropdown = false;
@@ -84,6 +92,12 @@
     private string? NavButtonCssClass => collapseNavMenu ? "collapsed" : null;
     private string userName = "User";
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        StateHasChanged();
+    }
+    
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -100,6 +114,7 @@
         AuthService.SignOutAsync();
         StateHasChanged();
         NavigationManager.NavigateTo("/auth/login");
+        StateHasChanged();
         return Task.CompletedTask;
     }
 }

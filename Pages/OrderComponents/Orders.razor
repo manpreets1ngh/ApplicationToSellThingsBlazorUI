@@ -44,6 +44,9 @@
 
 
 @code {
+    [Inject] 
+    private NavigationManager NavigationManager { get; set; }
+    
     private string errorMessage = string.Empty;
     private List<Order> OrdersList { get; set; }
     private bool _loading;
@@ -54,6 +57,23 @@
     {
         if (AuthState.Value.IsAuthenticated)
         {
+            // Retrieve the notification message from query parameter
+            var message = NavigationManager.Uri.Contains("message=")
+                ? Uri.UnescapeDataString(NavigationManager.Uri.Split("message=")[1])
+                : null;
+
+            if (!string.IsNullOrEmpty(message))
+            {
+                var notificationMessage = new NotificationModel
+                {
+                    Message = message,
+                    Type = NotificationMessageType.Success
+                };
+
+                // Show notification toast
+                Notification.Notify(notificationMessage);
+            }
+            
             var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
             userId = Guid.Parse(userDetail.Id);
 

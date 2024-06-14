@@ -4,7 +4,7 @@ namespace ApplicationToSellThings.BlazorUI.Services.Interfaces
 {
     public interface IOrderService
     {
-        Task<OrderResponseViewModel> PlaceOrder(OrderRequestModel orderRequestModel);
+        Task<OrderResponseViewModel> PlaceOrder(OrderRequestModel orderRequestModel, string token);
         Task<List<Order>> GetOrdersListForUser(Guid userId);
     }
 }

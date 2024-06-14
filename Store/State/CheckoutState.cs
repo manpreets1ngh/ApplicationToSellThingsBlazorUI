@@ -11,7 +11,7 @@ namespace ApplicationToSellThings.BlazorUI.Store.State
         public IEnumerable<AddressViewModel> Addresses { get; }
         public string PaymentOption { get; }
         public IEnumerable<CardDetail> CardDetails { get; }
-        public CardDetail SelectedCard { get; }
+        public CardDetail? SelectedCard { get; }
         public bool IsOrderReady { get; }
         public int Quantity { get; private set; } 
         public decimal TotalPrice { get; private set; }
