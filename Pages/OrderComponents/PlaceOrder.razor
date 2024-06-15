@@ -65,14 +65,14 @@
                     <h5>Payment Method</h5>
                     <div class="row">
                         <div class="col-8">
-                            <div class="btn-group" role="group" aria-label="Payment Method">
+                            <div role="group" aria-label="Payment Method">
                                 <button type="button"
-                                        class="btn @(paymentOption == "cash" ? "btn-primary" : "btn-outline-primary")"
+                                        Class="@(paymentOption == "cash" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
                                         @onclick="SetPaymentOptionToCash">
                                     Pay by Cash
                                 </button>
                                 <button type="button"
-                                        class="btn @(paymentOption == "card" ? "btn-primary" : "btn-outline-primary")"
+                                        Class="@(paymentOption == "card" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
                                         @onclick="SetPaymentOptionToCard">
                                     Pay by Card
                                 </button>
@@ -95,8 +95,6 @@
                                     else
                                     {
                                         <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewCardForPayment">Add New Card</MudButton>
-
-
                                     }
                                 </MudSelect>
 
@@ -114,7 +112,7 @@
                             }
                             else if (CheckoutState.Value.PaymentOption == "cash")
                             {
-                                <div>
+                                <div class="mt-2">
                                     <p>You have chosen to pay by cash. No further information is required.</p>
                                 </div>
                             }
@@ -128,10 +126,11 @@
                 {
                     <div class="card">
                         <div class="card-body" style="margin: 10px 10px 10px 10px;">
-                            <h4 class="card-title">@CheckoutState.Value.SelectedProduct.ProductName</h4>
+                            <h5 class="card-title">@CheckoutState.Value.SelectedProduct.ProductName</h5>
+                            <hr/>
                             <div class="row">
                                 <div class="col-8">
-                                    <h5>Price:</h5>
+                                    <h6>Price:</h6>
                                 </div>
                                 <div class="col-4 text-end">
                                     <strong>£@CheckoutState.Value.SelectedProduct.Price.ToString()</strong>
@@ -139,7 +138,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-10">
-                                    <h5 class="mt-5" for="quantity">Quantity:</h5>
+                                    <h6 class="mt-5" for="quantity">Quantity:</h6>
                                 </div>
                                 <div class="col-2 text-center">
                                     <MudSelect T="int" Class="mb-1" ValueChanged="@UpdateQuantity">
@@ -153,16 +152,23 @@
                             <br/>
                             <div class="row">
                                 <div class="col-8">
-                                    <h4>Total:</h4>
+                                    <h5>Total:</h5>
                                 </div>
                                 <div class="col-4 text-end">
                                     <h5>@(CheckoutState.Value.TotalPrice.ToString("C"))</h5>
                                 </div>
                             </div>
                             <br/>
-                            <MudButton Color="Color.Secondary" @onclick="HandlePlaceOrder" disabled="@(!CheckoutState.Value.IsOrderReady)">
-                                Checkout
-                            </MudButton>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    
+                                </div>
+                                <div class="col-md-6">
+                                    <button Class="@(!CheckoutState.Value.IsOrderReady ? "btn-checkout-notready px-4 py-2" : "btn-checkout px-4 py-2")" @onclick="HandlePlaceOrder" disabled="@(!CheckoutState.Value.IsOrderReady)" FullWidth="true">
+                                        Checkout
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>                   
                 }
@@ -186,7 +192,7 @@
     private bool showDropdownAddresses = false;
     private bool showDropdownCards = false;
     private Guid UserId;
-    private string paymentOption = "cash";
+    private string paymentOption;
     private List<CardDetail> CardDetails = new List<CardDetail>();
     private CardDetail selectedCard;
     private Guid? selectedCardId;
@@ -378,8 +384,12 @@
                     Type = NotificationMessageType.Success
                 };
 
-            NavigationManager.NavigateTo("/orders" + Uri.EscapeDataString(notificationMessage.Message));
-            StateHasChanged();
+            Notification.Notify(notificationMessage);
+            await InvokeAsync(() =>
+            {
+                NavigationManager.NavigateTo("/orders");
+                StateHasChanged();
+            });
         }
         else
         {
@@ -390,7 +400,7 @@
                 };
             
             Notification.Notify(notificationMessage);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

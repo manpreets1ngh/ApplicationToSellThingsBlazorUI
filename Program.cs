@@ -2,7 +2,6 @@ using ApplicationToSellThings.BlazorUI.Helper;
 using ApplicationToSellThings.BlazorUI.Middleware;
 using ApplicationToSellThings.BlazorUI.Services;
 using ApplicationToSellThings.BlazorUI.Services.Interfaces;
-using Blazored.Toast;
 using Fluxor;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -19,7 +18,6 @@ builder.Services.AddHttpClient("ApplicationToSellthingsAPI", client =>
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
-builder.Services.AddBlazoredToast();
 builder.Services.AddScoped<IProductsService, ProductsService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAddressService, AddressService>();

@@ -17,7 +17,7 @@
     <div class="container py-5 h-100">
         <div class="row">
 
-            <MudTable Items="@OrdersList.Take(4)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
+            <MudTable Items="@OrdersList.Take(OrdersList.Count)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
                 <HeaderContent>
                     <MudTh>OrderId</MudTh>
                     <MudTh>Product Name</MudTh>
@@ -44,6 +44,7 @@
 
 
 @code {
+    
     [Inject] 
     private NavigationManager NavigationManager { get; set; }
     
@@ -57,36 +58,12 @@
     {
         if (AuthState.Value.IsAuthenticated)
         {
-            // Retrieve the notification message from query parameter
-            var message = NavigationManager.Uri.Contains("message=")
-                ? Uri.UnescapeDataString(NavigationManager.Uri.Split("message=")[1])
-                : null;
-
-            if (!string.IsNullOrEmpty(message))
-            {
-                var notificationMessage = new NotificationModel
-                {
-                    Message = message,
-                    Type = NotificationMessageType.Success
-                };
-
-                // Show notification toast
-                Notification.Notify(notificationMessage);
-            }
             
             var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
             userId = Guid.Parse(userDetail.Id);
 
             OrdersList = await OrderService.GetOrdersListForUser(userId);
-            if(OrdersList.Count > 0 || OrdersList != null)
-            {
-                Notification.Notify(new NotificationModel
-                    {
-                        Message = $"Your orders List",
-                        Type = NotificationMessageType.Success
-                    });
-
-            }
+            
         }
 
         StateHasChanged();

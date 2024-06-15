@@ -30,18 +30,13 @@ namespace ApplicationToSellThings.BlazorUI.Services
                 if (responseData.Status == "Success" || responseData.StatusCode == 200)
                 {
                     products = responseData.Items.ToList();
-                    _notificationService.Notify(new NotificationModel
-                    {
-                        Message = "Products loaded successfully!",
-                        Type = NotificationMessageType.Success
-                    });
                 }
                 else
                 {
                     _notificationService.Notify(new NotificationModel
                     {
                         Message = "Failed to load products: " + responseData.Message,
-                        Type = NotificationMessageType.Error
+                        Type = NotificationMessageType.Warning
                     });
                 }
             }

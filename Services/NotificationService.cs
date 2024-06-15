@@ -1,28 +1,31 @@
 ﻿using ApplicationToSellThings.BlazorUI.Models;
-using Blazored.Toast.Services;
+using MudBlazor;
 
 namespace ApplicationToSellThings.BlazorUI.Services
 {
     public class NotificationService
     {
-        private readonly IToastService _toastService;
-
-        public NotificationService(IToastService toastService)
+        private readonly ISnackbar _snackbar;
+        public NotificationService(ISnackbar snackbar)
         {
-            _toastService = toastService;
+            _snackbar = snackbar;
         }
 
         public void Notify(NotificationModel message)
         {
-            if (message.Type == NotificationMessageType.Success)
-            {
-                _toastService.ShowSuccess(message.Message);
-            }
+            _snackbar.Add(message.Message, severity: ConvertToMudBlazorSeverity(message.Type));
+        }
 
-            else if (message.Type == NotificationMessageType.Error)
+        private MudBlazor.Severity ConvertToMudBlazorSeverity(NotificationMessageType type)
+        {
+            return type switch
             {
-                _toastService.ShowError(message.Message);
-            }
+                NotificationMessageType.Success => MudBlazor.Severity.Success,
+                NotificationMessageType.Error => MudBlazor.Severity.Error,
+                NotificationMessageType.Info => MudBlazor.Severity.Info,
+                NotificationMessageType.Warning => MudBlazor.Severity.Warning,
+                _ => MudBlazor.Severity.Info
+            };
         }
     }
 }
