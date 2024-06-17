@@ -20,22 +20,42 @@
             <MudTable Items="@OrdersList.Take(OrdersList.Count)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
                 <HeaderContent>
                     <MudTh>OrderId</MudTh>
-                    <MudTh>Product Name</MudTh>
-                    <MudTh>Product Price</MudTh>
+                    <MudTh>Product</MudTh>
+                    <MudTh>Price</MudTh>
                     <MudTh>Quantity</MudTh>
                     <MudTh>Total</MudTh>
                     <MudTh>Order Status</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
-                    @foreach (var orderDetail in context.OrderDetails)
-                    {
-                        <MudTd DataLabel="ProductName">@orderDetail.Product.ProductName</MudTd>
-                        <MudTd DataLabel="ProductName">@orderDetail.Product.Price</MudTd>
-                        <MudTd DataLabel="Quantity">@orderDetail.Quantity</MudTd>
-                    }
-                    <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
-                    <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
+                    <MudTr Class="@(IsNewOrder(context.OrderCreatedAt) ? "new-order" : "")">
+                        @if (@context.OrderDetails.Count > 1)
+                        {
+                            <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
+                            @foreach (var product in @context.OrderDetails)
+                            {
+                                <MudTr>
+                                    <MudTd DataLabel="ProductName">@product.Product.ProductName</MudTd>
+                                    <MudTd DataLabel="ProductPrice">@product.Product.Price</MudTd>
+                                    <MudTd DataLabel="Quantity">@product.Quantity</MudTd>
+                                </MudTr>
+                            }
+                            <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
+                            <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
+                        }
+                        else
+                        {
+                            <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
+                            @foreach (var product in @context.OrderDetails)
+                            {
+                                <MudTd DataLabel="ProductName">@product.Product.ProductName</MudTd>
+                                <MudTd DataLabel="ProductPrice">@product.Product.Price</MudTd>
+                                <MudTd DataLabel="Quantity">@product.Quantity</MudTd>
+                            }
+                            <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
+                            <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
+                        }
+                    </MudTr>
+                    
                 </RowTemplate>
             </MudTable>
         </div>
@@ -58,14 +78,18 @@
     {
         if (AuthState.Value.IsAuthenticated)
         {
-            
             var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
             userId = Guid.Parse(userDetail.Id);
-
             OrdersList = await OrderService.GetOrdersListForUser(userId);
-            
         }
-
+        
         StateHasChanged();
+    }
+    
+    private bool IsNewOrder(DateTime? orderCreatedAt)
+    {
+        // Assuming new orders are those created within the last day
+        if (!orderCreatedAt.HasValue) return false;
+        return (DateTime.UtcNow - orderCreatedAt.Value).TotalDays <= 1;
     }
 }

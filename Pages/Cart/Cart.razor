@@ -6,24 +6,51 @@
 @inject NavigationManager NavigationManager
 
 <section class="gradient-custom">
-<div class="container py-5 h-100">
-    <div class="grid-container">
-        <h2>Shopping Cart</h2>
-        <div class="cart-items">
-            @foreach (var item in CartState.Value.Items)
-            {
-            <div class="cart-item">
-                <h5>@item.ProductName</h5>
-                <p>@item.BrandName</p>
-                <p>£@item.Price</p>
-                <input type="number" min="1" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))" />
-                <button @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <h2>Cart Items</h2>
+        <div class="row">
+            <div class="cart-items">
+                <MudCard Class="container-fluid mt-3">
+                    <MudCardContent>
+                        @if (CartState.Value.Items.Count > 0)
+                        {
+                            <MudList Class="mt-2">
+                                @foreach (var item in CartState.Value.Items)
+                                {
+                                    <MudListItem Class="mb-4">
+                                        <MudGrid>
+                                            <MudItem xs="12" sm="4">
+                                                <MudText Typo="Typo.body1">@item.ProductName</MudText>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="2">
+                                                <MudText Typo="Typo.body1">@item.BrandName</MudText>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="2">
+                                                <input type="number" min="1" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))"/>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="2">
+                                                <MudText Typo="Typo.body2">£@item.Price</MudText>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="2">
+                                                <MudButton Variant="Variant.Text" OnClick="() => RemoveFromCart(item.ProductId)" Color="Color.Secondary">Remove</MudButton>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.subtitle1" Align="Align.Center">The cart is empty...</MudText>
+                        }
+                    </MudCardContent>
+                    <MudCardActions Class="justify-content-end">
+                        <MudButton Variant="Variant.Text" OnClick="ProceedToCheckout" Color="Color.Primary">Proceed to Checkout</MudButton>
+                    </MudCardActions>
+                </MudCard>
             </div>
-            }
         </div>
-        <button @onclick="ProceedToCheckout">Proceed to Checkout</button>
-    </div>
-</div>
+    </MudContainer>
 </section>
 
 @code {

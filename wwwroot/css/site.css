@@ -234,3 +234,22 @@ a, .btn-link {
     max-width: 90%; /* Ensure the image doesn't overflow */
     height: 100%;
 }
+
+.new-order {
+    background-color: #f5f0e6; /* Light green background for new orders */
+}
+
+.btn-signin{
+    background-color: #04081f;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.btn-signin:hover{
+    background-color: midnightblue;
+    color: white;
+}

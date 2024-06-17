@@ -67,12 +67,12 @@
                         <div class="col-8">
                             <div role="group" aria-label="Payment Method">
                                 <button type="button"
-                                        Class="@(paymentOption == "cash" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
+                                        class="@(paymentOption == "cash" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
                                         @onclick="SetPaymentOptionToCash">
                                     Pay by Cash
                                 </button>
                                 <button type="button"
-                                        Class="@(paymentOption == "card" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
+                                        class="@(paymentOption == "card" ? "btn-to-pay px-4 py-2" : "btn-to-pay-outline px-4 py-2")"
                                         @onclick="SetPaymentOptionToCard">
                                     Pay by Card
                                 </button>
@@ -126,42 +126,42 @@
                 {
                     @foreach (var product in CheckoutState.Value.SelectedProducts)
                     {
-                    <div class="card mb-3">
-                        <div class="card-body" style="margin: 10px 10px 10px 10px;">
-                            <h5 class="card-title">@product.ProductName</h5>
-                            <hr/>
-                            <div class="row">
-                                <div class="col-8">
-                                    <h6>Price:</h6>
+                        <div class="card mb-3">
+                            <div class="card-body" style="margin: 10px 10px 10px 10px;">
+                                <h5 class="card-title">@product.ProductName</h5>
+                                <hr/>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <h6>Price:</h6>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <strong>£@product.Price.ToString()</strong>
+                                    </div>
                                 </div>
-                                <div class="col-4 text-end">
-                                    <strong>£@product.Price.ToString()</strong>
+                                <div class="row">
+                                    <div class="col-10">
+                                        <h6 class="mt-5" for="quantity">Quantity:</h6>
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <MudSelect T="int" Class="mb-1" ValueChanged="@(q => UpdateQuantity(product.ProductId.ToString(), q))" Value="CheckoutState.Value.Quantities[product.ProductId.ToString()]">
+                                            @foreach(var quantity in GenerateQuantityOptions())
+                                            {
+                                                <MudSelectItem Value="@quantity">@quantity</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-10">
-                                    <h6 class="mt-5" for="quantity">Quantity:</h6>
-                                </div>
-                                <div class="col-2 text-center">
-                                    <MudSelect T="int" Class="mb-1" ValueChanged="@(q => UpdateQuantity(product.ProductId.ToString(), q))" Value="CheckoutState.Value.Quantities[product.ProductId.ToString()]">
-                                        @foreach(var quantity in GenerateQuantityOptions())
-                                        {
-                                            <MudSelectItem Value="@quantity">@quantity</MudSelectItem>
-                                        }
-                                    </MudSelect>
-                                </div>
-                            </div>
-                            <br/>
-                            <div class="row">
-                                <div class="col-8">
-                                    <h5>Total:</h5>
-                                </div>
-                                <div class="col-4 text-end">
-                                    <h5>£@(product.Price * CheckoutState.Value.Quantities[product.ProductId.ToString()])</h5>
+                                <br/>
+                                <div class="row">
+                                    <div class="col-8">
+                                        <h5>Total:</h5>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <h5>£@(product.Price * CheckoutState.Value.Quantities[product.ProductId.ToString()])</h5>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     }
 
                     <div class="card">
@@ -294,7 +294,7 @@
                 null, // Update this with the selected address
                 Addresses,
                 string.Empty, // Update this with the payment option
-                Enumerable.Empty<CardDetail>(), // Update this with the card details
+                CheckoutState.Value.CardDetails, // Update this with the card details
                 null, // Update this with the selected card
                 false, // Update this with the order readiness
                 quantities,
@@ -302,7 +302,7 @@
                 false,
                 errorMessage
             );
-
+            
             Dispatcher.Dispatch(new UpdateCheckoutStateAction(checkoutState));
         }        
     }
