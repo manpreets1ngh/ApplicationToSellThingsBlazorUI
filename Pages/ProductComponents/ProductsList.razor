@@ -1,9 +1,12 @@
 ﻿@page "/products"
 
+@using ApplicationToSellThings.BlazorUI.Models
 @using ApplicationToSellThings.BlazorUI.Models.Products;
+@using ApplicationToSellThings.BlazorUI.Services
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 @inject NavigationManager NavigationManager
 @inject IProductsService ProductsService
+@inject ICartService CartService
 
 @if (products == null)
 {
@@ -53,9 +56,8 @@ else
         NavigationManager.NavigateTo($"/productdetails/{productId}");
     }
 
-    private Task AddToCart(Product product)
+    private void AddToCart(Product product)
     {
-        // Implement adding to cart, potentially also in ProductsService
-        return Task.CompletedTask;
+        CartService.AddToCart(product);
     }
 }

@@ -122,18 +122,20 @@
                 </div>
             </div>
             <div class="col-lg-5">
-                @if (CheckoutState.Value.SelectedProduct != null)
+                @if (CheckoutState.Value.SelectedProducts != null && CheckoutState.Value.SelectedProducts.Any())
                 {
-                    <div class="card">
+                    @foreach (var product in CheckoutState.Value.SelectedProducts)
+                    {
+                    <div class="card mb-3">
                         <div class="card-body" style="margin: 10px 10px 10px 10px;">
-                            <h5 class="card-title">@CheckoutState.Value.SelectedProduct.ProductName</h5>
+                            <h5 class="card-title">@product.ProductName</h5>
                             <hr/>
                             <div class="row">
                                 <div class="col-8">
                                     <h6>Price:</h6>
                                 </div>
                                 <div class="col-4 text-end">
-                                    <strong>£@CheckoutState.Value.SelectedProduct.Price.ToString()</strong>
+                                    <strong>£@product.Price.ToString()</strong>
                                 </div>
                             </div>
                             <div class="row">
@@ -141,7 +143,7 @@
                                     <h6 class="mt-5" for="quantity">Quantity:</h6>
                                 </div>
                                 <div class="col-2 text-center">
-                                    <MudSelect T="int" Class="mb-1" ValueChanged="@UpdateQuantity">
+                                    <MudSelect T="int" Class="mb-1" ValueChanged="@(q => UpdateQuantity(product.ProductId.ToString(), q))" Value="CheckoutState.Value.Quantities[product.ProductId.ToString()]">
                                         @foreach(var quantity in GenerateQuantityOptions())
                                         {
                                             <MudSelectItem Value="@quantity">@quantity</MudSelectItem>
@@ -155,28 +157,41 @@
                                     <h5>Total:</h5>
                                 </div>
                                 <div class="col-4 text-end">
+                                    <h5>£@(product.Price * CheckoutState.Value.Quantities[product.ProductId.ToString()])</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    }
+
+                    <div class="card">
+                        <div class="card-body" style="margin: 10px 10px 10px 10px;">
+                            <div class="row">
+                                <div class="col-8">
+                                    <h5>Total Price:</h5>
+                                </div>
+                                <div class="col-4 text-end">
                                     <h5>@(CheckoutState.Value.TotalPrice.ToString("C"))</h5>
                                 </div>
                             </div>
                             <br/>
                             <div class="row">
                                 <div class="col-md-6">
-                                    
+
                                 </div>
                                 <div class="col-md-6">
-                                    <button Class="@(!CheckoutState.Value.IsOrderReady ? "btn-checkout-notready px-4 py-2" : "btn-checkout px-4 py-2")" @onclick="HandlePlaceOrder" disabled="@(!CheckoutState.Value.IsOrderReady)" FullWidth="true">
+                                    <button class="@(!CheckoutState.Value.IsOrderReady ? "btn-checkout-notready px-4 py-2" : "btn-checkout px-4 py-2")" @onclick="HandlePlaceOrder" disabled="@(!CheckoutState.Value.IsOrderReady)" fullwidth="true">
                                         Checkout
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </div>                   
-                }
-                else
-                {
+                    </div>
+                    }
+                    else
+                    {
                     <p>Product details are loading...</p>
-                }
-
+                    }
             </div>            
         </div>        
     </div>
@@ -210,16 +225,21 @@
             var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
             var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
 
-            // Assuming the parameter passed is named 'productId'
-            if (query.TryGetValue("productId", out var productId) && !string.IsNullOrWhiteSpace(productId))
+            var selectedProducts = new List<ProductViewModel>();
+            var quantities = new Dictionary<string, int>();
+
+            if (query.TryGetValue("productId", out var productId) && !string.IsNullOrWhiteSpace(productId) &&
+                query.TryGetValue("quantity", out var quantity) && int.TryParse(quantity, out var singleProductQuantity))
             {
                 try
                 {
                     var id = Guid.Parse(productId);
-                    Dispatcher.Dispatch(new FetchProductAction(id));
+                    Dispatcher.Dispatch(new FetchProductsAction(new List<Guid> { id }));
                     var product = await ProductService.GetProductByProductId(id);
                     if(product != null)
                     {
+                        selectedProducts.Add(product);
+                        quantities[productId] = singleProductQuantity;
                         AvailableQuantityForTheProduct = product.QuantityInStock;
                     }
                 }
@@ -229,19 +249,61 @@
                     errorMessage = $"Error fetching product details: {ex.Message}";
                 }
             }
+            else if (query.TryGetValue("productIds", out var productIds) && !string.IsNullOrWhiteSpace(productIds) &&
+                     query.TryGetValue("quantities", out var quantitiesStr) && !string.IsNullOrWhiteSpace(quantitiesStr))
+            {
+                var productIdArray = productIds.ToString().Split(",");
+                var quantityArray = quantitiesStr.ToString().Split(",").Select(int.Parse).ToArray();
+                var productGuids = productIdArray.Select(id => Guid.Parse(id)).ToList();
+                var fetchTasks = new List<Task<ProductViewModel>>();
+
+                for (int i = 0; i < productIdArray.Length; i++)
+                {
+                    var id = Guid.Parse(productIdArray[i]);
+                    fetchTasks.Add(ProductService.GetProductByProductId(id));
+                    quantities[productIdArray[i]] = quantityArray[i];
+                }
+
+                var products = await Task.WhenAll(fetchTasks);
+                foreach (var product in products)
+                {
+                    if (product != null)
+                    {
+                        selectedProducts.Add(product);
+                    }
+                }
+            }
             else
             {
-                errorMessage = "Product ID not specified.";
+                errorMessage = "Product ID(s) or quantities not specified.";
             }
 
             var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
             UserId = Guid.Parse(userDetail.Id);
 
+            CheckoutState.Value.SelectedProducts = selectedProducts;
+            CheckoutState.Value.Quantities = quantities;
+            
             Dispatcher.Dispatch(new FetchAddressesForUserAction(UserId));
             Dispatcher.Dispatch(new FetchCardsForUserAction(UserId));
 
             Addresses ??= new List<AddressViewModel>(); 
+            // Update the checkout state with selected products and quantities
+            var checkoutState = new CheckoutState(
+                selectedProducts,
+                null, // Update this with the selected address
+                Addresses,
+                string.Empty, // Update this with the payment option
+                Enumerable.Empty<CardDetail>(), // Update this with the card details
+                null, // Update this with the selected card
+                false, // Update this with the order readiness
+                quantities,
+                selectedProducts.Sum(p => p.Price * quantities[p.ProductId.ToString()]),
+                false,
+                errorMessage
+            );
 
+            Dispatcher.Dispatch(new UpdateCheckoutStateAction(checkoutState));
         }        
     }
 
@@ -338,10 +400,26 @@
         return options;
     }
 
-
-    private void UpdateQuantity(int newQuantity)
+    private void UpdateQuantity(string productId, int quantity)
     {
-        Dispatcher.Dispatch(new UpdateProductQuantityAction(newQuantity));
+        var quantities = new Dictionary<string, int>(CheckoutState.Value.Quantities);
+        quantities[productId] = quantity;
+
+        var updatedState = new CheckoutState(
+            CheckoutState.Value.SelectedProducts,
+            CheckoutState.Value.SelectedAddress,
+            CheckoutState.Value.Addresses,
+            CheckoutState.Value.PaymentOption,
+            CheckoutState.Value.CardDetails,
+            CheckoutState.Value.SelectedCard,
+            CheckoutState.Value.IsOrderReady,
+            quantities,
+            CheckoutState.Value.TotalPrice,
+            CheckoutState.Value.IsLoading,
+            CheckoutState.Value.ErrorMessage
+        );
+
+        Dispatcher.Dispatch(new UpdateCheckoutStateAction(updatedState));
     }
 
     private async Task HandleAddCard()
@@ -365,24 +443,29 @@
 
     private async Task HandlePlaceOrder()
     {
-        OrderRequest = new OrderRequestModel
-            {
-                UserId = UserId,
-                ProductId = CheckoutState.Value.SelectedProduct.ProductId,
-                CardId = CheckoutState.Value.SelectedCard.CardId,
-                ShippingAddressId = CheckoutState.Value.SelectedAddress.Id,
-                PaymentMethod = CheckoutState.Value.PaymentOption,
-                Quantity = CheckoutState.Value.Quantity
-            };
+        var orderProducts = CheckoutState.Value.SelectedProducts.Select(product => new OrderProductModel
+        {
+            ProductId = product.ProductId,
+            Quantity = CheckoutState.Value.Quantities[product.ProductId.ToString()]
+        }).ToList();
 
-        var order = await OrderService.PlaceOrder(OrderRequest, AuthState.Value.Token);
-        if(order != null)
+        var orderRequest = new OrderRequestModel
+        {
+            UserId = UserId,
+            Products = orderProducts,
+            CardId = CheckoutState.Value.SelectedCard?.CardId,
+            ShippingAddressId = CheckoutState.Value.SelectedAddress.Id,
+            PaymentMethod = CheckoutState.Value.PaymentOption
+        };
+
+        var order = await OrderService.PlaceOrder(orderRequest, AuthState.Value.Token);
+        if (order != null)
         {
             var notificationMessage = new NotificationModel
-                {
-                    Message = $"Your order for product {CheckoutState.Value.SelectedProduct.ProductName} has been placed successfully...",
-                    Type = NotificationMessageType.Success
-                };
+            {
+                Message = "Your order has been placed successfully.",
+                Type = NotificationMessageType.Success
+            };
 
             Notification.Notify(notificationMessage);
             await InvokeAsync(() =>
@@ -394,11 +477,11 @@
         else
         {
             var notificationMessage = new NotificationModel
-                {
-                    Message = $"Something is wrong with the order placed",
-                    Type = NotificationMessageType.Error
-                };
-            
+            {
+                Message = "Something went wrong with your order.",
+                Type = NotificationMessageType.Error
+            };
+
             Notification.Notify(notificationMessage);
             await InvokeAsync(StateHasChanged);
         }

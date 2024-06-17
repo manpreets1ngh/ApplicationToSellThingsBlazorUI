@@ -9,7 +9,7 @@ namespace ApplicationToSellThings.BlazorUI.Models.Orders
         public decimal Tax { get; set; }
         public string OrderStatus { get; set; }
         public int Quantity { get; set; }
-        public Product Product { get; set; }
+        public List<OrderDetailResponseViewModel> OrderDetails { get; set; }
         public DateTime? OrderCreatedAt { get; set; }
     }
 }

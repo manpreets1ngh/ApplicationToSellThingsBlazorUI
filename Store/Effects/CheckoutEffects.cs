@@ -1,4 +1,5 @@
-﻿using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+﻿using ApplicationToSellThings.BlazorUI.Models.Products;
+using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 using ApplicationToSellThings.BlazorUI.Store.Action;
 using Fluxor;
 
@@ -42,12 +43,20 @@ namespace ApplicationToSellThings.BlazorUI.Store.Effects
         }
 
         [EffectMethod]
-        public async Task HandleFetchProductAsync(FetchProductAction action, IDispatcher dispatcher)
+        public async Task HandleFetchProductAsync(FetchProductsAction action, IDispatcher dispatcher)
         {
             try
             {
-                var product = await _productService.GetProductByProductId(action.ProductId);
-                dispatcher.Dispatch(new SetProductAction(product));
+                var products = new List<ProductViewModel>();
+                foreach (var productId in action.ProductIds)
+                {
+                    var product = await _productService.GetProductByProductId(productId);
+                    if (product != null)
+                    {
+                        products.Add(product);
+                    }
+                }
+                dispatcher.Dispatch(new SetProductsAction(products));
             }
             catch (Exception ex)
             {

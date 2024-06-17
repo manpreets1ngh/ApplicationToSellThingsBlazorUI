@@ -11,14 +11,14 @@ namespace ApplicationToSellThings.BlazorUI.Store.Features
         protected override CheckoutState GetInitialState()
         {
             return new CheckoutState(
-                selectedProduct: null,
+                selectedProducts: null,
                 selectedAddress: null,
                 addresses: new List<AddressViewModel>(),
                 paymentOption: null,
                 cardDetails: new List<CardDetail>(),
                 selectedCard: null,
                 isOrderReady: false,
-                quantity: 0,
+                quantities: null,
                 totalPrice: 0,
                 isLoading: false,
                 errorMessage: null

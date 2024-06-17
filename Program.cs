@@ -23,6 +23,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UserDetailHelper>();
 builder.Services.AddHttpContextAccessor();
@@ -66,16 +67,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
     options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
 });
-
-builder.Services.AddFluxor(o =>
-{
-    o.ScanAssemblies(typeof(Program).Assembly);
-    o.UseReduxDevTools(rdt =>
-    {
-        rdt.Name = "Vision";
-    });
-});
-
 
 var app = builder.Build();
 

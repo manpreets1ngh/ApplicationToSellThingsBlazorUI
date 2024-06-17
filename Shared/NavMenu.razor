@@ -1,6 +1,6 @@
 ﻿@using Fluxor;
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
-@using ApplicationToSellThings.BlazorUI.Store.Action;
+@using ApplicationToSellThings.BlazorUI.Pages.Cart
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
@@ -45,6 +45,9 @@
                     }
 
                     <ul class="navbar-nav flex-grow justify-content-end">
+                        <li class="nav-item">
+                            <CartIcon />
+                        </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
                                 @AuthStateValue.UserName

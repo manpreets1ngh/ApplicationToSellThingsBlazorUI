@@ -1,0 +1,61 @@
+﻿@page "/checkout"
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces
+@inject IState<CartState> CartState
+@inject IState<AuthState> AuthState
+@inject ICartService CartService
+@inject NavigationManager NavigationManager
+
+<section class="gradient-custom">
+<div class="container py-5 h-100">
+    <div class="grid-container">
+        <h2>Shopping Cart</h2>
+        <div class="cart-items">
+            @foreach (var item in CartState.Value.Items)
+            {
+            <div class="cart-item">
+                <h5>@item.ProductName</h5>
+                <p>@item.BrandName</p>
+                <p>£@item.Price</p>
+                <input type="number" min="1" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))" />
+                <button @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
+            </div>
+            }
+        </div>
+        <button @onclick="ProceedToCheckout">Proceed to Checkout</button>
+    </div>
+</div>
+</section>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.Value.IsAuthenticated)
+        {
+            await CartService.LoadCartAsync();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+    
+    private void UpdateQuantity(string productId, int quantity)
+    {
+        CartService.UpdateQuantity(productId, quantity);
+    }
+
+    private void RemoveFromCart(string productId)
+    {
+        CartService.RemoveFromCart(productId);
+    }
+
+    private void ProceedToCheckout()
+    {
+        var cartItems = CartState.Value.Items;
+        var productIds = string.Join(",", cartItems.Select(i => i.ProductId));
+        var quantities = string.Join(",", cartItems.Select(i => i.Quantity));
+        var uri = $"/Orders/PlaceOrder?productIds={productIds}&quantities={quantities}";
+        NavigationManager.NavigateTo(uri);
+    }
+}

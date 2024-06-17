@@ -33,29 +33,30 @@ namespace ApplicationToSellThings.BlazorUI.Services
                 var responseData = await result.Content.ReadFromJsonAsync<ResponseViewModel<OrderResponseViewModel>>(options);
                 if (responseData.Status == "Success" || responseData.StatusCode == 200)
                 {
-                    var orderResponse = new OrderResponseViewModel
+                    return new OrderResponseViewModel
                     {
                         PaymentMethod = responseData.Data.PaymentMethod,
                         OrderStatus = responseData.Data.OrderStatus,
                         TotalAmount = responseData.Data.TotalAmount,
                         Tax = responseData.Data.Tax,
-                        Quantity = responseData.Data.Quantity,
-                        Product = responseData.Data.Product,
-                        OrderCreatedAt = responseData.Data.OrderCreatedAt                       
+                        OrderCreatedAt = responseData.Data.OrderCreatedAt,
+                        OrderDetails = responseData.Data.OrderDetails.Select(od => new OrderDetailResponseViewModel
+                        {
+                            ProductId = od.ProductId,
+                            ProductName = od.ProductName,
+                            Quantity = od.Quantity,
+                            Total = od.Total
+                        }).ToList()
                     };
-
-                    return orderResponse;
                 }
                 else
                 {
                     _notificationService.Notify(new NotificationModel
                     {
-                        Message = "Failed to add address: " + responseData.Message,
+                        Message = "Failed to place order: " + responseData.Message,
                         Type = NotificationMessageType.Error
                     });
-
                 }
-
             }
             return null;
         }

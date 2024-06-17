@@ -82,8 +82,8 @@ else
     {
         if(AuthState.Value.IsAuthenticated)
         {
-            NavigationManager.NavigateTo($"/Orders/PlaceOrder?productId={ProductId}");
-        }
+            var uri = $"/Orders/PlaceOrder?productId={ProductId}&quantity={product.QuantityInStock}";
+            NavigationManager.NavigateTo(uri);        }
         else
         {
             // User is not authenticated, navigate to Login page

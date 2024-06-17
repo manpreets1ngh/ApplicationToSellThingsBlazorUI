@@ -1,0 +1,26 @@
+﻿@inject IState<CartState> CartState
+@inject IState<AuthState> AuthState
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<a class="nav-link position-relative" href="javascript:void(0);" @onclick="NavigateToCheckout">
+    <span class="oi oi-cart" aria-hidden="true"></span>
+    <span class="badge badge-pill badge-danger position-absolute top-0 start-100 translate-middle">
+        @CartState.Value.Items.Sum(item => item.Quantity)
+    </span>
+</a>
+
+@code {
+    private async Task NavigateToCheckout()
+    {
+        
+        if (AuthState.Value.IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/checkout");
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}
