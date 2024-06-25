@@ -24,6 +24,7 @@ builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UserDetailHelper>();
 builder.Services.AddHttpContextAccessor();

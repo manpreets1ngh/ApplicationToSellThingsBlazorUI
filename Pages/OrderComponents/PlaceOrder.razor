@@ -144,7 +144,7 @@
                                     </div>
                                     <div class="col-2 text-center">
                                         <MudSelect T="int" Class="mb-1" ValueChanged="@(q => UpdateQuantity(product.ProductId.ToString(), q))" Value="CheckoutState.Value.Quantities[product.ProductId.ToString()]">
-                                            @foreach(var quantity in GenerateQuantityOptions())
+                                            @foreach(var quantity in GenerateQuantityOptions(product.QuantityInStock))
                                             {
                                                 <MudSelectItem Value="@quantity">@quantity</MudSelectItem>
                                             }
@@ -390,20 +390,17 @@
     }
 
     // Method to generate quantity options based on available quantity
-    private List<int> GenerateQuantityOptions()
+    private IEnumerable<int> GenerateQuantityOptions(int stock)
     {
-        List<int> options = new List<int>();
-        for (int i = 1; i <= AvailableQuantityForTheProduct; i++)
-        {
-            options.Add(i);
-        }
-        return options;
+        return Enumerable.Range(1, stock);
     }
 
     private void UpdateQuantity(string productId, int quantity)
     {
         var quantities = new Dictionary<string, int>(CheckoutState.Value.Quantities);
         quantities[productId] = quantity;
+        
+        var totalPrice = CheckoutState.Value.SelectedProducts.Sum(p => p.Price * quantities[p.ProductId.ToString()]);
 
         var updatedState = new CheckoutState(
             CheckoutState.Value.SelectedProducts,
@@ -414,7 +411,7 @@
             CheckoutState.Value.SelectedCard,
             CheckoutState.Value.IsOrderReady,
             quantities,
-            CheckoutState.Value.TotalPrice,
+            totalPrice,
             CheckoutState.Value.IsLoading,
             CheckoutState.Value.ErrorMessage
         );

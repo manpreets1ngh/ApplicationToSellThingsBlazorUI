@@ -32,7 +32,9 @@
                                                 <MudText Typo="Typo.body2">£@item.Price</MudText>
                                             </MudItem>
                                             <MudItem xs="12" sm="2">
-                                                <MudButton Variant="Variant.Text" OnClick="() => RemoveFromCart(item.ProductId)" Color="Color.Secondary">Remove</MudButton>
+                                                <div class="form-group">
+                                                    <button class="btn-remove" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
+                                                </div>
                                             </MudItem>
                                         </MudGrid>
                                     </MudListItem>
@@ -45,7 +47,9 @@
                         }
                     </MudCardContent>
                     <MudCardActions Class="justify-content-end">
-                        <MudButton Variant="Variant.Text" OnClick="ProceedToCheckout" Color="Color.Primary">Proceed to Checkout</MudButton>
+                        <div class="form-group">
+                            <button class="btn-proceedtocheckout" @onclick="ProceedToCheckout">Proceed to Checkout</button>
+                        </div>
                     </MudCardActions>
                 </MudCard>
             </div>

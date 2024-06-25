@@ -81,7 +81,7 @@ a, .btn-link {
     border-radius: 20px;
     border: none;
     margin: 15px;
-    background-color: #f7f6f5;
+    background-color: #edf0ee;
 }
 .card-body {
     flex-grow: 1;
@@ -92,7 +92,7 @@ a, .btn-link {
 }
 
 .fixed-card {
-    height: 450px; /* Set a fixed height for the card */
+    height: 500px; /* Set a fixed height for the card */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -111,7 +111,7 @@ a, .btn-link {
 }
 
 .btn-addToCart {
-    background-color: #f5a351;
+    background-color: #124e66;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -121,12 +121,12 @@ a, .btn-link {
 }
 
     .btn-addToCart:hover {
-        background-color: #d47a19;
+        background-color: #748d92;
         color: white;
     }
 
 .btn-placeorder {
-    background-color: #f5a351;
+    background-color: #124e66;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -135,7 +135,7 @@ a, .btn-link {
 }
 
     .btn-placeorder:hover {
-        background-color:#d47a19;
+        background-color:#748d92;
         color: white;
     }
 
@@ -155,7 +155,7 @@ a, .btn-link {
 }
 
 .btn-checkout {
-    background-color: #04081f;
+    background-color: #124e66;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -166,7 +166,7 @@ a, .btn-link {
 }
 
     .btn-checkout:hover {
-        background-color: #d47a19;
+        background-color: #748d92;
         color: white;
     }
 
@@ -188,7 +188,7 @@ a, .btn-link {
 }
 
 .btn-to-pay{
-    background-color: #04081f;
+    background-color: #124e66;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -197,10 +197,10 @@ a, .btn-link {
     font-size: 15px;
 }
 .btn-to-pay:hover{
-    background-color: #181633;
+    background-color: #748d92;
     color: white;
 }
-
+    
 .btn-to-pay-outline{
     background-color: white;
     border: none;
@@ -239,17 +239,50 @@ a, .btn-link {
     background-color: #f5f0e6; /* Light green background for new orders */
 }
 
-.btn-signin{
-    background-color: #04081f;
+.btn-account{
+    background-color: #124e66;
     border: none;
     color: white;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
     font-size: 15px;
+    width: 60%;
 }
 
-.btn-signin:hover{
-    background-color: midnightblue;
+.btn-account:hover{
+    background-color: #748d92;
+    color: white;
+}
+
+btn-proceedtocheckout{
+    background-color: #124e66;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 15px;
+    width: 60%;
+}
+
+btn-proceedtocheckout:hover{
+    background-color: #748d92;
+    color: white;
+}
+
+btn-remove{
+    background-color: #d1978e;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 15px;
+    width: 60%;
+}
+
+btn-remove:hover{
+    background-color: #a89996;
     color: white;
 }

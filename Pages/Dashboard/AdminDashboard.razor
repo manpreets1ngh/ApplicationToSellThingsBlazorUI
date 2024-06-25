@@ -1,7 +1,170 @@
 ﻿@page "/admin/dashboard"
+@using ApplicationToSellThings.BlazorUI.Models.AdminPanel
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces
+@inject IDashboardService DashboardService
 
-<h3>AdminDashboard</h3>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-3">
+    <MudGrid>
+        <!-- Header Section -->
+        <MudItem xs="12">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h4">Dashboard Overview</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-4">Your quick overview of key metrics</MudText>
+                <MudDivider Class="mb-4"/>
+                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Class="mr-2" @onclick="FetchAnnualData">Annual Data</MudButton>
+                <MudDatePicker T="DateTime?" Picker="Picker.Month" @bind-Date="selectedMonth" DateFormat="MMMM yyyy" Variant="Variant.Outlined" Label="Select Month" @onchange="OnMonthChanged"/>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Metrics Cards -->  
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Total Sales</MudText>
+                <MudText Typo="Typo.h5">@dashboardMetrics.TotalSales.ToString("C")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Total Orders</MudText>
+                <MudText Typo="Typo.h5">@dashboardMetrics.TotalOrders</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Total Customers</MudText>
+                <MudText Typo="Typo.h5">@dashboardMetrics.TotalCustomers</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Total Revenue</MudText>
+                <MudText Typo="Typo.h5">@dashboardMetrics.TotalRevenue.ToString("C")</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Total Products</MudText>
+                <MudText Typo="Typo.h5">@dashboardMetrics.TotalProducts</MudText>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Charts Section -->
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6">Sales Trends</MudText>
+                <!-- Add your Sales Trends Chart here -->
+                <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6">Revenue Trends</MudText>
+                <!-- Add your Revenue Trends Chart here -->
+                <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Recent Activity Section -->
+        <MudItem xs="12">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Recent Orders</MudText>
+                <MudTable Items="@dashboardMetrics.RecentOrders" Hover="true">
+                    <HeaderContent>
+                        <MudTh>Order Date</MudTh>
+                        <MudTh>Order Amount</MudTh>
+                        <MudTh>Payment Method</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Edit</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Order Date">@context.OrderCreatedAt</MudTd>
+                        <MudTd DataLabel="Order Amount">@context.TotalAmount.ToString("C")</MudTd>
+                        <MudTd DataLabel="Order Amount">@context.PaymentMethod</MudTd>
+                        <MudTd DataLabel="Status">@context.OrderStatus</MudTd>  
+                        <MudTd DataLabel="Edit">
+                            <MudSelect T="string" @bind-Value="context.OrderStatus" @onchange="@(async (e) => await UpdateOrderStatus(context.Id, e.Value.ToString()))">
+                                <MudSelectItem Value="Pending">Pending</MudSelectItem>
+                                <MudSelectItem Value="Dispatched">Dispatched</MudSelectItem>
+                                <MudSelectItem Value="Completed">Completed</MudSelectItem>
+                                <MudSelectItem Value="Shipped">Shipped</MudSelectItem>
+                            </MudSelect>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Recent Customer Sign-Ups</MudText>
+                <!-- Add your Recent Customer Sign-Ups List here -->
+            </MudPaper>
+        </MudItem>
+
+        <!-- Notifications Section -->
+        <MudItem xs="12">
+            <MudPaper Elevation="4" Class="pa-4">
+                <MudText Typo="Typo.h6">Notifications</MudText>
+                <!-- Add your Notifications Panel here -->
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
 
 @code {
+    
+    private DashboardMetrics dashboardMetrics = new DashboardMetrics();
+    private DateTime? selectedMonth;
+    private List<MudBlazor.ChartSeries> salesTrendsData = new List<MudBlazor.ChartSeries>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchAnnualData();
+        var recentorders = await DashboardService.GetRecentOrdersAsync(5);
+        dashboardMetrics.RecentOrders = recentorders;
+        StateHasChanged();
+    }
+
+    private async Task FetchAnnualData()
+    {
+        dashboardMetrics = await DashboardService.GetDashboardMetricsAsync();
+        ConvertToMudBlazorChartSeries();
+    }
+
+    private async Task FetchMonthlyData()
+    {
+        if (selectedMonth.HasValue)
+        {
+            var startDate = new DateTime(selectedMonth.Value.Year, selectedMonth.Value.Month, 1);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+            dashboardMetrics = await DashboardService.GetDashboardMetricsAsync(startDate, endDate);
+            ConvertToMudBlazorChartSeries();
+        }
+    }
+    
+    private async Task OnMonthChanged(ChangeEventArgs args)
+    {
+        if (DateTime.TryParse(args.Value.ToString(), out DateTime selectedDate))
+        {
+            selectedMonth = selectedDate;
+            await FetchMonthlyData();
+        }
+    }
+    
+    private void ConvertToMudBlazorChartSeries()
+    {
+        salesTrendsData = dashboardMetrics.SalesTrends.Select(st => new MudBlazor.ChartSeries
+        {
+            Name = st.Name,
+            Data = st.Data
+        }).ToList();
+    }
+
+    private async Task UpdateOrderStatus(int orderId, string status)
+    {
+        var request = new UpdateOrderStatusRequest { Status = status };
+        var response = await HttpClient.PutAsJsonAsync($"api/orders/{orderId}/status", request);
+        if
+    }
+    
 
 }

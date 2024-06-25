@@ -98,5 +98,44 @@ namespace ApplicationToSellThings.BlazorUI.Services
 
             return null;
         }
+        
+        
+        public async Task<List<Order>> GetOrders()
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = client.GetAsync($"/api/Orders");
+
+            if (result.Result.IsSuccessStatusCode)
+            {
+                try
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<Order>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Items;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = ex.Message,
+                        Type = NotificationMessageType.Error
+                    });
+                }
+            }
+            else
+            {
+                return null;
+            }
+
+            return null;
+        }
     }
 }

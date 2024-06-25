@@ -42,7 +42,14 @@ namespace ApplicationToSellThings.BlazorUI.Services
                 if (resultData.Status == "Error")
                 {
                     // Consider using a notification service or another method to communicate this back to the UI
-                    return null;
+                    return new ResponseViewModel<string>()
+                    {
+                        Status= resultData.Status,
+                        StatusCode = resultData.StatusCode,
+                        Data= resultData.Data,
+                        Items = resultData.Items,
+                        Message= resultData.Message
+                    };;
                 }
                 
                 var tokenValue = resultData.Data;
@@ -72,6 +79,53 @@ namespace ApplicationToSellThings.BlazorUI.Services
                     Items = resultData.Items,
                     Message= resultData.Message
                 };
+            }
+            else
+            {
+                return new ResponseViewModel<string>() {
+                    Message = "API request not proceeeded...",
+                    Status = "Internal Server Error",
+                    StatusCode = 500
+                };
+            }
+        }
+        
+        public async Task<ResponseViewModel<string>> UserRegisterAccount(RegisterUser registerUser, string returnUrl = null)
+        {
+            List<string> userRoles = new List<string>();
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = await client.PostAsJsonAsync("/api/Auth/register", registerUser);
+
+            if (result.IsSuccessStatusCode)
+            {
+                _isAuthenticated = true;
+                var token = await result.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resultData = JsonSerializer.Deserialize<ResponseViewModel<string>>(token, options);
+
+                if (resultData.Status == "Error")
+                {
+                    // Consider using a notification service or another method to communicate this back to the UI
+                    return new ResponseViewModel<string>()
+                    {
+                        Status= resultData.Status,
+                        StatusCode = resultData.StatusCode,
+                        Data= resultData.Data,
+                        Items = resultData.Items,
+                        Message= resultData.Message
+                    };;
+                }
+                else
+                {
+                    return new ResponseViewModel<string>()
+                    {
+                        Status= resultData.Status,
+                        StatusCode = resultData.StatusCode,
+                        Data= resultData.Data,
+                        Items = resultData.Items,
+                        Message= resultData.Message
+                    };
+                }
             }
             else
             {

@@ -1,5 +1,139 @@
-﻿<h3>Register</h3>
+﻿@page "/auth/register-account"
+@using System.ComponentModel.DataAnnotations
+@using ApplicationToSellThings.BlazorUI.Helper;
+@using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Services;
+@using ApplicationToSellThings.BlazorUI.Store.Action;
+@using System.IdentityModel.Tokens.Jwt;
+@using Microsoft.AspNetCore.WebUtilities;
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IAuthService AuthService
+@inject NotificationService NotificationService
+@inject IDispatcher Dispatcher
+@inject UserDetailHelper UserDetailHelper
+
+@if (IsLoading)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <section class="gradient-custom">
+        <div class="container py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+                    <div class="b-3 mt-md-4">
+
+                    </div>
+                    <div class="b-3 mt-md-4 text-center">
+                        <h3 class="fw-bold mb-5">Register for an account</h3>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body p-5">
+                            <div class="b-3 mt-md-1">
+                                <h5 class="fw-bold mb-5">PERSONAL DETAILS  <MudIcon Icon="@Icons.Material.Filled.Info" Class="mb-1" />
+                                </h5>
+                            </div>
+                            <div class="row mt-md-2 text-center">
+                                <EditForm Model="@RegisterUser" OnValidSubmit="OnValidSubmit">
+                                    <DataAnnotationsValidator/>
+                                    <div class="form-group floating-label">
+                                        <MudTextField Label="Username" @bind-Value="@RegisterUser.Username" Required="true" RequiredError="Username is required" For="@(() => RegisterUser.Username)"></MudTextField>
+                                    </div>
+
+                                    <MudGrid>
+                                        <MudItem xs="6">
+                                            <div class="form-group floating-label mt-3">
+                                                <MudTextField Label="FirstName" @bind-Value="@RegisterUser.FirstName" Required="true" RequiredError="FirstName is required" For="@(() => RegisterUser.FirstName)"></MudTextField>
+                                            </div>
+                                        </MudItem>
+                                        <MudItem xs="6">
+                                            <div class="form-group floating-label mt-3">
+                                                <MudTextField Label="LastName" @bind-Value="@RegisterUser.LastName" Required="true" RequiredError="LastName is required" For="@(() => RegisterUser.LastName)"></MudTextField>
+                                            </div>
+                                        </MudItem>
+                                    </MudGrid>
+
+                                    <div class="form-group floating-label mt-3">
+                                        <MudTextField Label="Email" @bind-Value="@RegisterUser.Email" Required="true" RequiredError="Email is required" For="@(() => RegisterUser.Email)"></MudTextField>
+                                    </div>
+
+                                    <div class="form-group floating-label mt-3">
+                                        <MudTextField Label="Password" @bind-Value="@RegisterUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => RegisterUser.Password)"></MudTextField>
+                                    </div>
+
+                                    <div class="form-group align-center mt-4">
+                                        <button class=" btn-account px-5 py-2" type="submit">Register</button>
+                                    </div>
+                                </EditForm>
+                            </div>
+
+                            <div class="row d-flex mt-3 text-center">
+                                <p>
+                                    Already have an account <a href="/auth/login" class="text-decoration-underline">Login here</a>
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
 
 @code {
+    private bool IsLoading = false;
+    private MudForm form;
+    private string email;
+    private string password;
+    private RegisterUser RegisterUser = new RegisterUser();
+    private string errorMessage = string.Empty;
+    private string returnUrl = string.Empty;
 
+    protected override void OnInitialized()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("returnUrl", out var url))
+        {
+            returnUrl = url.FirstOrDefault();
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        Console.WriteLine("Form SUbmit clicked...");
+        IsLoading = true;
+        var result = await AuthService.UserRegisterAccount(RegisterUser);
+        if (result.Status == "Success" && result.StatusCode == 200)
+        {
+            NotificationService.Notify(new NotificationModel
+            {
+                Message = "Account created",
+                Type = NotificationMessageType.Success
+            });
+
+            NavigationManager.NavigateTo("/auth/login");
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationModel
+            {
+                Message = result.Message,
+                Type = NotificationMessageType.Error
+            });
+        }
+
+        StateHasChanged();
+
+    }
+
+    
 }

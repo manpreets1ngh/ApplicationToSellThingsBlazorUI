@@ -16,10 +16,8 @@
 <section class="gradient-custom">
     <div class="container py-5 h-100">
         <div class="row">
-
             <MudTable Items="@OrdersList.Take(OrdersList.Count)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
                 <HeaderContent>
-                    <MudTh>OrderId</MudTh>
                     <MudTh>Product</MudTh>
                     <MudTh>Price</MudTh>
                     <MudTh>Quantity</MudTh>
@@ -27,35 +25,33 @@
                     <MudTh>Order Status</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTr Class="@(IsNewOrder(context.OrderCreatedAt) ? "new-order" : "")">
-                        @if (@context.OrderDetails.Count > 1)
-                        {
-                            <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
-                            @foreach (var product in @context.OrderDetails)
+                    @if (context.OrderDetails.Count > 1)
+                    {
+                        <MudTd DataLabel="Products" ColSpan="2">
+                            @foreach (var orderDetail in @context.OrderDetails)
                             {
                                 <MudTr>
-                                    <MudTd DataLabel="ProductName">@product.Product.ProductName</MudTd>
-                                    <MudTd DataLabel="ProductPrice">@product.Product.Price</MudTd>
-                                    <MudTd DataLabel="Quantity">@product.Quantity</MudTd>
+                                    <MudTd DataLabel="ProductName">@orderDetail.Product.ProductName</MudTd>
+                                    <MudTd DataLabel="ProductPrice">@orderDetail.Product.Price</MudTd>
+                                    <MudTd DataLabel="Quantity">@orderDetail.Quantity</MudTd>
                                 </MudTr>
                             }
-                            <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
-                            <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
-                        }
-                        else
-                        {
-                            <MudTd DataLabel="OrderId">@context.OrderId</MudTd>
-                            @foreach (var product in @context.OrderDetails)
-                            {
-                                <MudTd DataLabel="ProductName">@product.Product.ProductName</MudTd>
-                                <MudTd DataLabel="ProductPrice">@product.Product.Price</MudTd>
-                                <MudTd DataLabel="Quantity">@product.Quantity</MudTd>
-                            }
-                            <MudTd DataLabel="Total">@context.TotalAmount</MudTd>
-                            <MudTd DataLabel="OrderStatus">@context.OrderStatus</MudTd>
-                        }
-                    </MudTr>
+                        </MudTd>
+                    }
+                    else
+                    {
+                        var orderDetail = context.OrderDetails.First();
+                        <MudTd DataLabel="ProductName">@orderDetail.Product.ProductName</MudTd>
+                        <MudTd DataLabel="ProductPrice">@orderDetail.Product.Price</MudTd>
+                        <MudTd DataLabel="Quantity">@orderDetail.Quantity</MudTd>
+                    }
                     
+                    <MudTd DataLabel="Total" RowSpan="@(context.OrderDetails.Count > 1 ? context.OrderDetails.Count : 1)">
+                        @context.TotalAmount
+                    </MudTd>
+                    <MudTd DataLabel="OrderStatus" RowSpan="@(context.OrderDetails.Count > 1 ? context.OrderDetails.Count : 1)">
+                        @context.OrderStatus
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
         </div>

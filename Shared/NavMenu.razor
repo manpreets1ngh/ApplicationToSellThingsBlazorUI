@@ -18,65 +18,63 @@
             <div class="navbar-nav flex-grow-1">
                 @if(AuthStateValue.IsAuthenticated)
                 {
-                    @if(AuthStateValue.UserRoles.Contains("Admin"))
-                    {
-                        <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                            <li class="nav-item">
-                                <NavLink class="nav-link" href="/admin/dashboard" Match="NavLinkMatch.All">
-                                        <span class="oi oi-home" aria-hidden="true"></span> Dashboard
-                                </NavLink>
-                            </li>
-                        </ul>
-                    }
-                    else if (AuthStateValue.UserRoles.Contains("User"))
+                    @if (AuthStateValue.UserRoles.Contains("User"))
                     {
                         <ul class="navbar-nav me-auto mb-2 mb-md-0">
                             <li class="nav-item">
                                 <NavLink class="nav-link" href="products" Match="NavLinkMatch.All">
-                                    <span class="oi oi-list" aria-hidden="true"></span> Products
+                                    <span class="" aria-hidden="true"></span> Products
                                 </NavLink>
                             </li>
                             <li class="nav-item">
                                 <NavLink class="nav-link" href="orders">
-                                    <span class="oi oi-list-rich" aria-hidden="true"></span> Orders
+                                    <span class="" aria-hidden="true"></span> Orders
                                 </NavLink>
                             </li>
                         </ul>
                     }
 
                     <ul class="navbar-nav flex-grow justify-content-end">
-                        <li class="nav-item">
+                        <li>
                             <CartIcon />
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
-                                @AuthStateValue.UserName
+                                @FormatUserName(AuthState.Value.UserName)
                             </a>
                             <div class="@DropdownCssClass dropdown-menu" aria-labelledby="navbarDropdown">
-                                <NavLink class="dropdown-item" href="user/profile">Manage Profile</NavLink>
-                                <NavLink class="dropdown-item" href="user/address">Add Address</NavLink>
+                                <NavLink class="nav-item dropdown-item" href="user/profile">Manage Profile</NavLink>
+                                <NavLink class="nav-item dropdown-item mt-2" href="user/address">Add Address</NavLink>
                                 <div class="dropdown-divider"></div>
-                                <button class="dropdown-item" @onclick="Logout">Logout</button>
+                                <NavLink type="button" class="nav-item dropdown-item" @onclick="Logout">
+                                    Logout</NavLink>
                             </div>
                         </li>
                     </ul>
                 }                
                 else
                 {
-                    <ul class="navbar-nav flex-grow justify-content-end">
+                    <ul class="navbar-nav flex-grow">
                         <li class="nav-item">
-                            <NavLink class="nav-link" href="account/register">
-                                <span class="oi oi" aria-hidden="true"></span> Register
+                            <NavLink class="nav-link" href="products" Match="NavLinkMatch.All">
+                                <span class="" aria-hidden="true"></span> Products
+                            </NavLink>
+                        </li>
+                    </ul>
+                    
+                    <ul class="navbar-nav flex-grow">
+                        <li class="nav-item">
+                            <NavLink class="nav-link" href="/auth/register-account">
+                                <span class="" aria-hidden="true"></span> Register
                             </NavLink>
                         </li>
                         <li class="nav-item">
                             <NavLink class="nav-link" href="/auth/login">
-                                <span class="oi oi-account-login" aria-hidden="true"></span> Login
+                                <span class="" aria-hidden="true"></span> Login
                             </NavLink>
                         </li>
                     </ul>
                 }
-                
             </div>            
         </div>
     </div>
@@ -99,6 +97,10 @@
     {
         base.OnInitialized();
         StateHasChanged();
+        if (AuthStateValue.IsAuthenticated)
+        {
+            StateHasChanged();
+        }
     }
     
     private void ToggleNavMenu()
@@ -119,5 +121,15 @@
         NavigationManager.NavigateTo("/auth/login");
         StateHasChanged();
         return Task.CompletedTask;
+    }
+    
+    private string FormatUserName(string userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return userName;
+        }
+
+        return System.Text.RegularExpressions.Regex.Replace(userName, "(\\B[A-Z])", " $1");
     }
 }

@@ -1,4 +1,5 @@
 ﻿@page "/auth/login"
+@using System.ComponentModel.DataAnnotations
 @using ApplicationToSellThings.BlazorUI.Helper;
 @using ApplicationToSellThings.BlazorUI.Models;
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
@@ -25,32 +26,36 @@ else
             <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col-12 col-md-8 col-lg-6 col-xl-5">
                     <div class="card" style="border-radius: 2rem;">
-                        <div class="card-body p-5 text-center">
+                        <div class="card-body p-5">
 
-                            <div class="mb-3 mt-md-4">
-                                <h5 class="fw-bold mb-5">Sign In to your account</h5>
-
-                                <EditForm Model="@LoginUser" OnValidSubmit="HandleLogin">
-                                    <DataAnnotationsValidator />
+                            <div class="b-3 mt-md-4">
+                                
+                            </div>
+                            <div class="b-3 mt-md-4">
+                                <h5 class="fw-bold mb-5">Welcome back!</h5>
+                                <h5 class="fw-bold mb-5">Please sign in to continue</h5>
+                            </div>
+                            
+                            <div class="mb-3 mt-md-4 text-center">
+                                <EditForm Model="@LoginUser" OnValidSubmit="OnValidSubmit">
+                                    <DataAnnotationsValidator/>
                                     <div class="form-group floating-label">
-                                        <InputText @bind-Value="LoginUser.Email" id="typeEmailX" class="form-control floating-input" placeholder=" " />
-                                        <ValidationMessage For="@(() => LoginUser.Email)" class="row text-danger px-3" />
+                                        <MudTextField Label="Email" @bind-Value="@LoginUser.Email" Required="true" RequiredError="Email is required" For="@(() => LoginUser.Email)"></MudTextField>
                                     </div>
 
                                     <div class="form-group floating-label mt-3">
-                                        <InputText @bind-Value="LoginUser.Password" type="password" id="typePasswordX" class="form-control floating-input" placeholder=" " />
-                                        <ValidationMessage For="@(() => LoginUser.Password)" class="row text-danger px-3" />
+                                        <MudTextField Label="Password" @bind-Value="@LoginUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => LoginUser.Password)"></MudTextField>
                                     </div>
 
-                                    <p class="small mb-4 pb-lg-2"><a href="#!">Forgot password?</a></p>
-
-                                    <button class="btn-signin px-5 py-2" type="submit" value="Sign In">Sign In</button>
+                                    <div class="form-group align-center mt-4">
+                                        <button class=" btn-account px-5 py-2" type="submit">Sign In</button>
+                                    </div>
                                 </EditForm>
-
                             </div>
-                            <div class="row d-flex justify-content-center">
+                            <div class="row d-flex">
+                                <p class="small mt-2"><a href="#!">Forgot password?</a></p>
                                 <p>
-                                    Don't have an account? <a href="/auth/register" class="text-decoration-underline">Register</a>
+                                    Don't have an account? <a href="/auth/register-account" class="text-decoration-underline">Create an account</a>
                                 </p>
                             </div>
 
@@ -65,6 +70,9 @@ else
 
 @code {
     private bool IsLoading = false;
+    private MudForm form;
+    private string email;
+    private string password;
     private LoginUser LoginUser = new LoginUser();
     private string errorMessage = string.Empty;
     private string returnUrl = string.Empty;
@@ -80,8 +88,22 @@ else
         StateHasChanged();
     }
 
-    private async Task HandleLogin()
+    private string ValidateEmail(string email)
     {
+        if (string.IsNullOrEmpty(email))
+        {
+            return "Email is required";
+        }
+        if (!new EmailAddressAttribute().IsValid(email))
+        {
+            return "Invalid email format";
+        }
+        return null;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        Console.WriteLine("Form SUbmit clicked...");
         IsLoading = true;
         var result = await AuthService.UserLogin(LoginUser);
         if(result != null)
@@ -109,7 +131,7 @@ else
                 {
                     if (userRoles.Contains("Admin"))
                     {
-                        NavigationManager.NavigateTo("/Admin/Dashboard");
+                        NavigationManager.NavigateTo("/admin/dashboard");
                     }
                     else if (userRoles.Contains("User"))
                     {
@@ -130,7 +152,7 @@ else
             {
                 NotificationService.Notify(new NotificationModel
                     {
-                        Message = "Unable to Login...",
+                        Message = result.Message,
                         Type = NotificationMessageType.Error
                     });
             }
