@@ -1,0 +1,49 @@
+﻿@using ApplicationToSellThings.BlazorUI.Services.Interfaces
+@inject IState<AuthState> AuthState
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<MudContainer>
+    <MudNavMenu Color="Color.Info">
+        <MudText Typo="Typo.h5" Class="mb-3 mt-3">Admin Panel</MudText>
+        <MudNavGroup Title="@FormatUserName(AuthState.Value.UserName)" Expanded="false">
+            <MudNavLink Href="/users">Users</MudNavLink>
+            <MudNavLink Href="/security">Security</MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="/admin/dashboard" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        <MudNavLink Href="/products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Products</MudNavLink>
+        <MudNavLink Href="/products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Orders</MudNavLink>
+        <MudNavLink Href="/billing" Disabled="true">Customers</MudNavLink>
+        <MudNavGroup Title="Settings" Expanded="false">
+            <MudNavLink Href="/users">Users</MudNavLink>
+            <MudNavLink Href="/security">Security</MudNavLink>
+        </MudNavGroup>
+        <MudNavLink Href="/about">About</MudNavLink>
+        <MudNavLink @onclick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
+    </MudNavMenu>
+</MudContainer>
+
+@code
+{
+
+    
+    private Task Logout()
+    {
+        // Implement logout logic here
+        AuthService.SignOutAsync();
+        StateHasChanged();
+        NavigationManager.NavigateTo("/auth/login");
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    
+    private string FormatUserName(string userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return userName;
+        }
+
+        return System.Text.RegularExpressions.Regex.Replace(userName, "(\\B[A-Z])", " $1");
+    }
+}

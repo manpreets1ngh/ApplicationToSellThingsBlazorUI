@@ -1,0 +1,130 @@
+﻿@using ApplicationToSellThings.BlazorUI.Models.Orders
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces
+@inject IOrderService OrderService
+
+<MudDialog>
+    <DialogContent>
+        <MudForm>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Order ID" @bind-Value="OrderIdString" Disabled="true"/>
+                    <MudTextField T="string" Label="User ID" @bind-Value="UserIdString" Disabled="true"/>
+                    <MudTextField T="string" Label="Card ID" @bind-Value="CardIdString" Disabled="true"/>
+                    <MudTextField T="DateTime?" Label="Order Date" @bind-Value="Order.OrderCreatedAt" Disabled="true"/>
+                    @if (Order.OrderUpdatedAt != null)
+                    {
+                        <MudTextField T="DateTime?" Label="Order Date" @bind-Value="Order.OrderCreatedAt" Disabled="true"/>
+                    }
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect T="string" Label="Status" @bind-Value="Order.OrderStatus">
+                        @foreach (var status in StatusOptions)
+                        {
+                            <MudSelectItem Value="@status">@status</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField T="string" Label="Payment method" @bind-Value="Order.PaymentMethod" Disabled="true"/>
+                    <MudTextField T="decimal" Label="Tax" @bind-Value="Order.Tax"/>
+                </MudItem>
+            </MudGrid>
+            @if (Order.OrderDetails.Count > 1)
+            {
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Class="mt-2 mb-3">Products In Order</MudText>
+                        <MudTable Items="@Order.OrderDetails" Hover="true">
+                            <HeaderContent>
+                                <MudTh>Product Id</MudTh>
+                                <MudTh>Product Name</MudTh>
+                                <MudTh>Brand Name</MudTh>
+                                <MudTh>Quantity In Stock</MudTh>
+                                <MudTh>Product Price</MudTh>
+                                <MudTh>Quantity Ordered</MudTh>
+                                <MudTh>Total</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Product Id" Disabled="true">@context.ProductId</MudTd>
+                                <MudTd DataLabel="Product Name">@context.Product.ProductName</MudTd>
+                                <MudTd DataLabel="Brand Name">@context.Product.BrandName</MudTd>
+                                <MudTd DataLabel="Quantity In Stock">@context.Product.QuantityInStock</MudTd>
+                                <MudTd DataLabel="Product Price">£@context.Product.Price</MudTd>
+                                <MudTd DataLabel="Quantity Ordered">@context.Quantity</MudTd>
+                                <MudTd DataLabel="Total">£@context.Total</MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudItem>
+                </MudGrid>
+            }
+            else
+            {
+                @foreach (var orderDetail in Order.OrderDetails)
+                {
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudTextField T="Guid" Label="Product Id" @bind-Value="@orderDetail.ProductId"/>
+                            <MudTextField T="string" Lines="3" Label="Product Name" @bind-Value="@orderDetail.Product.ProductName"/>
+                            <MudTextField T="string" Label="Brand Name" @bind-Value="@orderDetail.Product.BrandName"/>
+                            <MudTextField T="int" Label="Quantity In Stock" @bind-Value="@orderDetail.Product.QuantityInStock"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="decimal" Label="Product Price" @bind-Value="@orderDetail.Product.Price"/>
+                            <MudTextField T="int" Label="Quantity" @bind-Value="@orderDetail.Quantity"/>
+                            <MudTextField T="decimal" Label="Total" @bind-Value="@orderDetail.Total"/>
+                        </MudItem>
+                    </MudGrid>
+                }
+            }
+            
+            <MudGrid>
+                <MudItem xs="6"></MudItem>
+                <MudItem xs="6">
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudText Class="mt-lg-5" Align="Align.Start" Typo="Typo.h6">Total Amount:</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField T="decimal" Class="mb-lg-5" AdornmentColor="Color.Dark" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" IconSize="Size.Small" @bind-Value="Order.TotalAmount"/>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" Class="rounded-3" OnClick="Save">Save</MudButton>
+        <MudButton OnClick="Cancel" Color="Color.Default" Class="rounded-3">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Order Order { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private List<string> StatusOptions = new List<string> { "Pending", "Dispatched", "Completed", "Shipped" };
+    private string OrderIdString
+    {
+        get => Order.OrderId.ToString();
+        set => Order.OrderId = Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
+    }
+
+    private string UserIdString
+    {
+        get => Order.UserId.ToString();
+        set => Order.UserId = Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
+    }
+
+    private string CardIdString
+    {
+        get => Order.CardId.ToString();
+        set => Order.CardId = Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
+    }
+    private async Task Save()
+    {
+        await OrderService.UpdateOrder(Order.OrderId, Order);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

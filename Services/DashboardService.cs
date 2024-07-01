@@ -65,8 +65,7 @@ public class DashboardService : IDashboardService
     {
         var ordersList = await _orderService.GetOrders();
         var orders =  ordersList
-            .Where(o => o.OrderStatus == "Pending")
-            .OrderByDescending(o => o.OrderCreatedAt)
+            .OrderByDescending(o => o.OrderUpdatedAt ?? o.OrderCreatedAt)
             .Take(count)
             .ToList();
 

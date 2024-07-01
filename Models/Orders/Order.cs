@@ -12,7 +12,8 @@ namespace ApplicationToSellThings.BlazorUI.Models.Orders
         public decimal TotalAmount { get; set; }
         public decimal Tax { get; set; }
         public string OrderStatus { get; set; }
-        public DateTime? OrderCreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? OrderCreatedAt { get; set; }
+        public DateTime? OrderUpdatedAt { get; set; }
 
         public List<OrderDetail>? OrderDetails { get; set; }
     }

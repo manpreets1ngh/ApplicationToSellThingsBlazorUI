@@ -7,5 +7,6 @@ namespace ApplicationToSellThings.BlazorUI.Services.Interfaces
         Task<OrderResponseViewModel> PlaceOrder(OrderRequestModel orderRequestModel, string token);
         Task<List<Order>> GetOrdersListForUser(Guid userId);
         Task<List<Order>> GetOrders();
+        Task<Order> UpdateOrder(Guid id, Order order);
     }
 }
