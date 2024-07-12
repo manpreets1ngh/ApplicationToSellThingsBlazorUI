@@ -91,11 +91,6 @@ namespace ApplicationToSellThings.BlazorUI.Services
                     });
                 }
             }
-            else
-            {
-                return null;
-            }
-
             return null;
         }
         

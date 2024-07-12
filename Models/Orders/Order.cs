@@ -2,7 +2,7 @@
 
 namespace ApplicationToSellThings.BlazorUI.Models.Orders
 {
-    public class Order
+    public class    Order
     {
         [Key]
         public Guid OrderId { get; set; }

@@ -14,5 +14,7 @@ namespace ApplicationToSellThings.BlazorUI.Models.Products
         public string Category { get; set; }
         public int QuantityInStock { get; set; }
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
+        public byte[]? ProductImage { get; set; }  // New property for storing image data
+
     }
 }

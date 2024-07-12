@@ -40,11 +40,11 @@ else
                                 <EditForm Model="@LoginUser" OnValidSubmit="OnValidSubmit">
                                     <DataAnnotationsValidator/>
                                     <div class="form-group floating-label">
-                                        <MudTextField Label="Email" @bind-Value="@LoginUser.Email" Required="true" RequiredError="Email is required" For="@(() => LoginUser.Email)"></MudTextField>
+                                        <MudTextField Class="input-fields" Label="Email" @bind-Value="@LoginUser.Email" Required="true" RequiredError="Email is required" For="@(() => LoginUser.Email)"></MudTextField>
                                     </div>
 
                                     <div class="form-group floating-label mt-3">
-                                        <MudTextField Label="Password" @bind-Value="@LoginUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => LoginUser.Password)"></MudTextField>
+                                        <MudTextField Class="input-fields" Label="Password" @bind-Value="@LoginUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => LoginUser.Password)"></MudTextField>
                                     </div>
 
                                     <div class="form-group align-center mt-4">

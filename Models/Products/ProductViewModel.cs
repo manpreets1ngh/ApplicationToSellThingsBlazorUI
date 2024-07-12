@@ -18,5 +18,6 @@ namespace ApplicationToSellThings.BlazorUI.Models.Products
         public int QuantityInStock { get; set; }
 
         public DateTime? CreatedAt { get; set; }
+        public byte[]? ProductImage { get; set; }
     }
 }

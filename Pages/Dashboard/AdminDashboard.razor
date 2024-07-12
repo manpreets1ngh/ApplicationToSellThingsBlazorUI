@@ -7,72 +7,91 @@
 @inject IOrderService OrderService
 @inject IDialogService DialogService
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-3">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-3">
     <MudGrid>
         <!-- Header Section -->
         <MudItem xs="12">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h4">Dashboard Overview</MudText>
-                <MudText Typo="Typo.subtitle1" Class="mb-4">Your quick overview of key metrics</MudText>
-                <MudDivider Class="mb-4"/>
-                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Class="mr-2" @onclick="FetchAnnualData">Annual Data</MudButton>
-                <MudDatePicker T="DateTime?" Picker="Picker.Month" @bind-Date="selectedMonth" DateFormat="MMMM yyyy" Variant="Variant.Outlined" Label="Select Month" @onchange="OnMonthChanged"/>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h4">Dashboard Overview</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-4">Your quick overview of key metrics</MudText>
+                    <MudDivider Class="mb-4"/>
+                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" Class="mr-2" @onclick="FetchAnnualData">Annual Data</MudButton>
+                    <MudDatePicker T="DateTime?" Picker="Picker.Month" @bind-Date="selectedMonth" DateFormat="MMMM yyyy" Variant="Variant.Outlined" Label="Select Month" @onchange="OnMonthChanged"/>
+                </div>
+            </div>
         </MudItem>
         
         <!-- Metrics Cards -->  
         <MudItem xs="12" sm="6" md="2">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Total Sales</MudText>
-                <MudText Typo="Typo.h5">@dashboardMetrics.TotalSales.ToString("C")</MudText>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Total Sales</MudText>
+                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalSales.ToString("C")</MudText>
+                </div>
+            </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="2">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Total Orders</MudText>
-                <MudText Typo="Typo.h5">@dashboardMetrics.TotalOrders</MudText>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Total Orders</MudText>
+                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalOrders</MudText>
+                </div>
+            </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Total Customers</MudText>
-                <MudText Typo="Typo.h5">@dashboardMetrics.TotalCustomers</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Total Revenue</MudText>
-                <MudText Typo="Typo.h5">@dashboardMetrics.TotalRevenue.ToString("C")</MudText>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Total Customers</MudText>
+                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalCustomers</MudText>
+                </div>
+            </div>
         </MudItem>
         <MudItem xs="12" sm="6" md="2">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Total Products</MudText>
-                <MudText Typo="Typo.h5">@dashboardMetrics.TotalProducts</MudText>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Total Revenue</MudText>
+                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalRevenue.ToString("C")</MudText>
+                </div>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Total Products</MudText>
+                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalProducts</MudText>
+                </div>
+            </div>
         </MudItem>
 
         <!-- Charts Section -->
         <MudItem xs="12" md="6">
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6">Sales Trends</MudText>
-                <!-- Add your Sales Trends Chart here -->
-                <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Sales Trends</MudText>
+                    <!-- Add your Sales Trends Chart here -->
+                    <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+                </div>
+            </div>
         </MudItem>
         <MudItem xs="12" md="6">
-            <MudPaper Elevation="2" Class="pa-4">
-                <MudText Typo="Typo.h6">Revenue Trends</MudText>
-                <!-- Add your Revenue Trends Chart here -->
-                <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Revenue Trends</MudText>
+                    <!-- Add your Revenue Trends Chart here -->
+                    <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+                </div>
+            </div>
         </MudItem>
 
         <!-- Recent Activity Section -->
         <MudItem xs="12">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Class="mb-2" Typo="Typo.h6">Recent Orders</MudText>
-                <MudTable Items="@dashboardMetrics.RecentOrders" Hover="true">
+            <div class="row">
+                <MudText Class="mb-4" Typo="Typo.h6">Recent Orders</MudText>
+                <MudTable Items="@dashboardMetrics.RecentOrders" Hover="true" Style="background-color: #F4F4F4; border-radius: 15px; margin-right: 10px; background-color: #F4F4F4;
+    box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
+    0 2px 3px rgba(27, 18, 9);
+    transition: box-shadow 0.3s ease-in-out;">
                     <HeaderContent>
                         <MudTh>Order Date</MudTh>
                         <MudTh>Order Amount</MudTh>
@@ -86,25 +105,29 @@
                         <MudTd DataLabel="Order Amount">@context.PaymentMethod</MudTd>
                         <MudTd DataLabel="Status">@context.OrderStatus</MudTd>
                         <MudTd DataLabel="Edit">
-                            <MudButton Variant="Variant.Filled" Class="rounded-3" Color="Color.Tertiary" OnClick="() => OpenEditDialog(context)">Edit</MudButton>
+                            <MudButton Variant="Variant.Outlined" Class="rounded-3" Color="Color.Default" OnClick="() => OpenEditDialog(context)">Edit</MudButton>
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
-            </MudPaper>
+            </div>
         </MudItem>
         <MudItem xs="12">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Recent Customer Sign-Ups</MudText>
-                <!-- Add your Recent Customer Sign-Ups List here -->
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Recent Customer Sign-Ups</MudText>
+                    <!-- Add your Recent Customer Sign-Ups List here -->
+                </div>
+            </div>
         </MudItem>
 
         <!-- Notifications Section -->
         <MudItem xs="12">
-            <MudPaper Elevation="4" Class="pa-4">
-                <MudText Typo="Typo.h6">Notifications</MudText>
-                <!-- Add your Notifications Panel here -->
-            </MudPaper>
+            <div class="card">
+                <div class="card-body">
+                    <MudText Typo="Typo.h6">Notifications</MudText>
+                    <!-- Add your Notifications Panel here -->
+                </div>
+            </div>
         </MudItem>
     </MudGrid>
 </MudContainer>

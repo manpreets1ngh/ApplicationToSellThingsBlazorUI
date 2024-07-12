@@ -10,48 +10,49 @@
         <h2>Cart Items</h2>
         <div class="row">
             <div class="cart-items">
-                <MudCard Class="container-fluid mt-3">
-                    <MudCardContent>
+                <div class="card container-fluid mt-3">
                         @if (CartState.Value.Items.Count > 0)
                         {
-                            <MudList Class="mt-2">
+                            <div class="mt-2">
                                 @foreach (var item in CartState.Value.Items)
                                 {
-                                    <MudListItem Class="mb-4">
-                                        <MudGrid>
-                                            <MudItem xs="12" sm="4">
-                                                <MudText Typo="Typo.body1">@item.ProductName</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="2">
-                                                <MudText Typo="Typo.body1">@item.BrandName</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="2">
-                                                <input type="number" min="1" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))"/>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="2">
-                                                <MudText Typo="Typo.body2">£@item.Price</MudText>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="2">
-                                                <div class="form-group">
-                                                    <button class="btn-remove" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
-                                                </div>
-                                            </MudItem>
-                                        </MudGrid>
-                                    </MudListItem>
+                                    <div class="card-list mb-4">
+                                        <div class="card-body">
+                                            <MudGrid>
+                                                <MudItem xs="12" sm="4">
+                                                    <MudText Typo="Typo.body1">@item.ProductName</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="2">
+                                                    <MudText Typo="Typo.body1">@item.BrandName</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="2">
+                                                    <input type="number" min="1" value="@item.Quantity" @onchange="(e) => UpdateQuantity(item.ProductId, int.Parse(e.Value.ToString()))"/>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="2">
+                                                    <MudText Typo="Typo.body2">£@item.Price</MudText>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="2">
+                                                    <div class="form-group">
+                                                        <button class="btn-remove" @onclick="() => RemoveFromCart(item.ProductId)">Remove</button>
+                                                    </div>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </div>
+                                    </div>
                                 }
-                            </MudList>
+                            </div>
                         }
                         else
                         {
                             <MudText Typo="Typo.subtitle1" Align="Align.Center">The cart is empty...</MudText>
                         }
-                    </MudCardContent>
-                    <MudCardActions Class="justify-content-end">
-                        <div class="form-group">
+                        
+                    <div class="row">
+                        <div class="d-flex justify-content-end align-content-end mt-3 mb-4">
                             <button class="btn-proceedtocheckout" @onclick="ProceedToCheckout">Proceed to Checkout</button>
                         </div>
-                    </MudCardActions>
-                </MudCard>
+                    </div>
+                </div>
             </div>
         </div>
     </MudContainer>

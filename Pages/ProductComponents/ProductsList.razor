@@ -2,11 +2,14 @@
 
 @using ApplicationToSellThings.BlazorUI.Models
 @using ApplicationToSellThings.BlazorUI.Models.Products;
+@using ApplicationToSellThings.BlazorUI.Pages.Dashboard.Dialogs;
 @using ApplicationToSellThings.BlazorUI.Services
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 @inject NavigationManager NavigationManager
 @inject IProductsService ProductsService
 @inject ICartService CartService
+@inject IState<AuthState> AuthState
+@inject IDialogService DialogService
 
 @if (products == null)
 {
@@ -14,33 +17,106 @@
 }
 else
 {
-    <section class="gradient-custom">
-        <div class="container py-5 h-100">
-            <div class="grid-container">
-                @foreach (var product in products)
-                {
-                    <div class="grid-item">
-                        <div class="card card-border fixed-card">
-                            <div class="container-md">
-                                <img src="pictures/product1.jpg" class="card-img-top center-img" alt="..." style="border-radius: 20px;">
-                            </div>
-                            <div class="card-body p-4">
-                                <h6 class="card-title">
-                                    <a class="product-link" @onclick="() => NavigateToDetails(product.ProductId)" style="cursor:pointer; color:black; text-decoration: none;">@product.ProductName</a>
-                                </h6>
-                                <p>@product.BrandName</p>
-                                <h6>£@product.Price</h6>
+    if(AuthState.Value.IsAuthenticated && AuthState.Value.UserRoles.Contains("Admin"))
+    {
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+            <MudGrid>
+                <MudItem xs="12">
+                    <div class="row">
+                        <MudText Class="mb-4" Typo="Typo.h6">Products</MudText>
+                        <MudTable Items="@products" Hover="true" Style="background-color: #F4F4F4; border-radius: 15px; margin-right: 10px; background-color: #F4F4F4;
+                            box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
+                            0 2px 3px rgba(27, 18, 9);
+                            transition: box-shadow 0.3s ease-in-out;">
+                            <HeaderContent>
+                                <MudTh>Product Image</MudTh>
+                                <MudTh>Product Id</MudTh>
+                                <MudTh>Product Name</MudTh>
+                                <MudTh>Brand Name</MudTh>
+                                <MudTh>Description</MudTh>
+                                <MudTh>Quantity In Stock</MudTh>
+                                <MudTh>Price</MudTh>
+                                <MudTh>Discount</MudTh>
+                                <MudTh>Created At</MudTh>
+                                <MudTh></MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Product Image">
+                                    @if(context.ProductImage != null)
+                                    {
+                                        <img src="data:image/png;base64,@Convert.ToBase64String(@context.ProductImage)" alt="@context.ProductName" width="100" height="100" />
+                                    }
+                                </MudTd>
+                                <MudTd DataLabel="Product Id">@context.ProductId</MudTd>
+                                <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
+                                <MudTd DataLabel="Brand Name">@context.BrandName</MudTd>
+                                <MudTd DataLabel="Description">@context.Description
+                                    @*<div class="product-description">
+                                        <ul>
+                                            @foreach (var sentence in context.Description.Split('.'))
+                                            {
+                                                @if (!string.IsNullOrWhiteSpace(sentence))
+                                                {
+                                                    <li>@sentence.</li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>*@
+                                </MudTd>
+                                <MudTd DataLabel="Quantity In Stock">@context.QuantityInStock</MudTd>
+                                <MudTd DataLabel="Price">£@context.Price</MudTd>
+                                @if(context.Discount > 0)
+                                {
+                                    <MudTd DataLabel="Discount">@context.Discount%</MudTd>
+                                }
+                                else
+                                {
+                                    <MudTd DataLabel="Discount">@context.Discount</MudTd>
+                                }
+                                <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>                                
+                                <MudTd DataLabel="Edit">
+                                    <MudButton Variant="Variant.Outlined" Class="rounded-3" Color="Color.Tertiary" OnClick="() => OpenEditDialog(context)">Edit</MudButton>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    }
+    else
+    {
+        <section class="gradient-custom">
+            <div class="container py-5 h-100">
+                <div class="grid-container">
+                    @foreach (var product in products)
+                    {
+                        <div class="grid-item">
+                            <div class="card card-border fixed-card">
+                                <div class="image-products-list">
+                                    @if (product.ProductImage != null)
+                                    {
+                                        <img src="data:image/png;base64,@Convert.ToBase64String(product.ProductImage)" alt="@product.ProductName" width="100" height="100" class="product-image" />
+                                    }
+                                </div>
+                                <div class="card-body p-4">
+                                    <h6 class="card-title">
+                                        <a class="product-link" @onclick="() => NavigateToDetails(product.ProductId)" style="cursor:pointer; color:black; text-decoration: none;">@product.ProductName</a>
+                                    </h6>
+                                    <p>@product.BrandName</p>
+                                    <h6 class="mb-5">£@product.Price</h6>
 
-                                <div class="col-lg-8" style="border: 1px solid;">
-                                    <button @onclick="() => AddToCart(product)" class="btn-addToCart px-3 py-2 position-absolute bottom-0 end-0 m-3">Add to Cart</button>
+                                    <div class="col-lg-8">
+                                        <button @onclick="() => AddToCart(product)" class="btn-addToCart px-3 py-2 position-absolute bottom-0 end-0 m-3">Add to Cart</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    }    
 }
 
 @code {
@@ -59,5 +135,20 @@ else
     private void AddToCart(Product product)
     {
         CartService.AddToCart(product);
+    }
+
+    private async Task OpenEditDialog(Product product)
+    {
+        var parameters = new DialogParameters { ["Product"] = product };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = DialogService.Show<ProductEditDialog>("Edit Product", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Cancelled)
+        {
+            // Refresh product list or handle the updated product
+            products = await ProductsService.GetProductsAsync();
+            StateHasChanged();
+        }
     }
 }

@@ -39,7 +39,7 @@
                             <CartIcon />
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
+                            <a class="nav-link " id="navbarDropdown" role="button" @onclick="ToggleDropdown" aria-expanded="@showDropdown">
                                 @FormatUserName(AuthState.Value.UserName)
                             </a>
                             <div class="@DropdownCssClass dropdown-menu" aria-labelledby="navbarDropdown">

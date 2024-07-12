@@ -34,6 +34,15 @@ a, .btn-link {
     color: red;
 }
 
+.product-description ul {
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.product-description li {
+    margin-bottom: 5px;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
@@ -78,10 +87,12 @@ a, .btn-link {
 }
 
 .card {
-    border-radius: 20px;
+    border-radius: 15px;
     border: none;
-    margin: 15px;
-    background-color: #edf0ee;
+    background-color: #F4F4F4;
+    box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
+    0 2px 3px rgba(27, 18, 9);
+    transition: box-shadow 0.3s ease-in-out;
 }
 .card-body {
     flex-grow: 1;
@@ -91,8 +102,17 @@ a, .btn-link {
     text-align: left;
 }
 
+.card-list{
+    border-radius: 20px;
+    border: none;
+    margin: 15px 0px 0px 10px;
+    background-color: #F4F4F4;
+    box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
+    0 2px 3px rgba(27, 18, 9);
+    transition: box-shadow 0.3s ease-in-out;
+}
 .fixed-card {
-    height: 500px; /* Set a fixed height for the card */
+    height: auto; /* Set a fixed height for the card */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -110,10 +130,13 @@ a, .btn-link {
     }
 }
 
+.input-fields{
+    background-color: #F4F4F4;
+}
 .btn-addToCart {
-    background-color: #124e66;
-    border: none;
-    color: white;
+    background-color: #F4F4F4;
+    border: 1px solid #CfC4A2;
+    color: #CfC4A2;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
@@ -121,7 +144,7 @@ a, .btn-link {
 }
 
     .btn-addToCart:hover {
-        background-color: #748d92;
+        background-color: #CfC4A2;
         color: white;
     }
 
@@ -155,18 +178,18 @@ a, .btn-link {
 }
 
 .btn-checkout {
-    background-color: #124e66;
+    background-color: #1B1209;
     border: none;
     color: white;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 12px;
     width: 100%;
 }
 
     .btn-checkout:hover {
-        background-color: #748d92;
+        background-color: #453320;
         color: white;
     }
 
@@ -188,32 +211,32 @@ a, .btn-link {
 }
 
 .btn-to-pay{
-    background-color: #124e66;
+    background-color: #1B1209;
     border: none;
     color: white;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 12px;
 }
 .btn-to-pay:hover{
-    background-color: #748d92;
+    background-color: #453320;
     color: white;
 }
     
 .btn-to-pay-outline{
-    background-color: white;
+    background-color: #1B1209;
     border: none;
-    color: #04081f;
+    color: white;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 12px;
 }
 
 .btn-to-pay-outline:hover{
-    background-color: white;
-    color: #04081f;
+    background-color: #453320;
+    color: white;
 }
 
 .center-img {
@@ -255,34 +278,66 @@ a, .btn-link {
     color: white;
 }
 
-btn-proceedtocheckout{
-    background-color: #124e66;
+.btn-proceedtocheckout{
+    background-color: #1B1209;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 12px;
+    width: 20%;
+}
+
+.btn-proceedtocheckout:hover{
+    background-color: #453320;
+    color: white;
+}
+
+.btn-remove{
+    background-color: #BE7c5D;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 2rem;
+    cursor: pointer;
+    font-size: 12px;
+    width: 40%;
+    
+}
+
+.btn-remove:hover{
+    background-color: #b08672;
+    color: white;
+}
+
+.product-create{
+    background-color: #1B1209;
     border: none;
     color: white;
     padding: 10px 20px;
     border-radius: 2rem;
     cursor: pointer;
     font-size: 15px;
-    width: 60%;
+    width: 20%;
 }
 
-btn-proceedtocheckout:hover{
-    background-color: #748d92;
+.product-create:hover
+{
+    background-color: #453320;
     color: white;
 }
 
-btn-remove{
-    background-color: #d1978e;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 2rem;
-    cursor: pointer;
-    font-size: 15px;
-    width: 60%;
+.image-products-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
-btn-remove:hover{
-    background-color: #a89996;
-    color: white;
+.product-image {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    background: #F4F4F4;
 }

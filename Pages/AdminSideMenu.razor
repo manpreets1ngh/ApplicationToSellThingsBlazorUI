@@ -3,15 +3,16 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<MudContainer>
-    <MudNavMenu Color="Color.Info">
-        <MudText Typo="Typo.h5" Class="mb-3 mt-3">Admin Panel</MudText>
+<MudPaper Width="250px" Class="px-3 py-3" Elevation="0" Style="background-color: #F4F4F4;">
+    <MudNavMenu Class="admin-sidemenu">
+        <MudText Typo="Typo.h5" Class="mb-3 mt-3 ml-3">Admin Platform</MudText>
         <MudNavGroup Title="@FormatUserName(AuthState.Value.UserName)" Expanded="false">
             <MudNavLink Href="/users">Users</MudNavLink>
             <MudNavLink Href="/security">Security</MudNavLink>
         </MudNavGroup>
         <MudNavLink Href="/admin/dashboard" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
         <MudNavLink Href="/products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Products</MudNavLink>
+        <MudNavLink Href="/products/create" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Add New Product</MudNavLink>
         <MudNavLink Href="/products" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.List">Orders</MudNavLink>
         <MudNavLink Href="/billing" Disabled="true">Customers</MudNavLink>
         <MudNavGroup Title="Settings" Expanded="false">
@@ -21,7 +22,8 @@
         <MudNavLink Href="/about">About</MudNavLink>
         <MudNavLink @onclick="Logout" Icon="@Icons.Material.Filled.Logout">Logout</MudNavLink>
     </MudNavMenu>
-</MudContainer>
+</MudPaper>
+
 
 @code
 {

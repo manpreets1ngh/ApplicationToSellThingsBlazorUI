@@ -1,5 +1,6 @@
 ﻿using ApplicationToSellThing.BlazorUI.Models;
 using ApplicationToSellThings.BlazorUI.Models;
+using ApplicationToSellThings.BlazorUI.Models.Orders;
 using ApplicationToSellThings.BlazorUI.Models.Products;
 using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 using System.Text.Json;
@@ -15,6 +16,51 @@ namespace ApplicationToSellThings.BlazorUI.Services
         {
             _httpClientFactory = httpClientFactory;
             _notificationService = notificationService;
+        }
+
+        public async Task<ProductViewModel> CreateProductAsync(Product product)
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = await client.PostAsJsonAsync($"/api/Products", product);
+            if (result.IsSuccessStatusCode)
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var responseData = await result.Content.ReadFromJsonAsync<Product>(options);
+                if (responseData != null)
+                {
+                    var productResponse = new ProductViewModel
+                    {
+                        ProductId = responseData.ProductId,
+                        ProductName = responseData.ProductName,
+                        BrandName = responseData.BrandName,
+                        Description = responseData.Description,
+                        Price = responseData.Price,
+                        Discount = responseData.Discount,
+                        Category = responseData.Category,
+                        QuantityInStock = responseData.QuantityInStock,
+                        CreatedAt = responseData.CreatedAt,
+                        ProductImage = responseData.ProductImage,
+                    };
+
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = "Product Created Successfully",
+                        Type = NotificationMessageType.Success
+                    });
+
+                    return productResponse;
+                }
+                else
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = "Failed to create product" ,
+                        Type = NotificationMessageType.Error
+                    });
+
+                }
+            }
+            return null;
         }
 
         public async Task<List<Product>> GetProductsAsync()
@@ -92,5 +138,37 @@ namespace ApplicationToSellThings.BlazorUI.Services
             return product;
         }
 
+        public async Task<Product> UpdateProduct(Guid productId, Product product)
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = client.PutAsJsonAsync($"/api/Products/{productId}", product);
+            if (result.Result.IsSuccessStatusCode)
+            {
+                try
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<Product>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Data;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = ex.Message,
+                        Type = NotificationMessageType.Error
+                    });
+                }
+            }
+            return null;
+
+        }
     }
 }
