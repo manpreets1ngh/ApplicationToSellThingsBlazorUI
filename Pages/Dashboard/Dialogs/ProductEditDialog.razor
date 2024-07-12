@@ -1,0 +1,74 @@
+﻿@using ApplicationToSellThings.BlazorUI.Models.Products;
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@inject IProductsService ProductService
+
+<MudDialog Style="background-color: #F4F4F4; border-radius: 15px;">
+    <DialogContent>
+
+        <MudForm>
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudTextField T="string" Label="Product ID" @bind-Value="ProductIdString" Disabled="true" />
+                    <MudTextField T="string" Label="Product Name" @bind-Value="Product.ProductName" Lines="5" />
+                    <MudTextField T="string" Label="Brand Name" @bind-Value="Product.BrandName" />
+                    <MudTextField T="DateTime?" Label="Product Created On" @bind-Value="Product.CreatedAt" Disabled="true" />
+                    <div class="mt-4 mb-3">
+                        <label for="fileUpload" class="form-label">Upload Image</label><br/>
+                        <InputFile id="fileUpload" OnChange="LoadFiles" />
+                    </div>
+                    
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField T="int" Label="Quantity In Stock" @bind-Value="Product.QuantityInStock" />
+                    <MudTextField T="decimal" Label="Price" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.CurrencyPound" @bind-Value="Product.Price" IconSize="Size.Small"/>
+                    <MudTextField T="decimal?" Label="Discount on Product" @bind-Value="Product.Discount" />
+                </MudItem>
+
+                <MudItem xs="12">                                       
+                    <MudTextField T="string" Label="Description" @bind-Value="Product.Description" Lines="5"/>
+                </MudItem>
+            </MudGrid>
+           
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton ButtonType="ButtonType.Submit" Color="Color.Success" Variant="Variant.Outlined" Class="rounded-3 mb-3" OnClick="Save">Save</MudButton>
+        <MudButton OnClick="Cancel" Color="Color.Default" Variant="Variant.Outlined" Class="rounded-3 mr-4 mb-3">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Product Product { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    private string UploadedFileName;
+
+    private string ProductIdString
+    {
+        get => Product.ProductId.ToString();
+        set => Product.ProductId = Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Save()
+    {
+        await ProductService.UpdateProduct(Product.ProductId, Product);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            UploadedFileName = file.Name;
+            var buffer = new byte[file.Size];
+            await file.OpenReadStream().ReadAsync(buffer);
+            Product.ProductImage = buffer;
+        }
+    }
+}
