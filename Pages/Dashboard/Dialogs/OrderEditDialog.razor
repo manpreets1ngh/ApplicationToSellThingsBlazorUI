@@ -1,10 +1,14 @@
-﻿@using ApplicationToSellThings.BlazorUI.Models.Orders
+﻿@using ApplicationToSellThings.BlazorUI.Models
+@using ApplicationToSellThings.BlazorUI.Models.Orders
+@using ApplicationToSellThings.BlazorUI.Services
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces
 @inject IOrderService OrderService
+@inject IStatusService StatusService
+@inject NotificationService Notification
 
-<MudDialog Style="background-color: #F4F4F4; border-radius: 15px;">
+<MudDialog Style="background-color: #F4F4F4; border-radius: 10px;">
     <DialogContent>
-        
+
         <MudForm>
             <MudGrid>
                 <MudItem xs="6">
@@ -18,10 +22,22 @@
                     }
                 </MudItem>
                 <MudItem xs="6">
-                    <MudSelect T="string" Label="Status" @bind-Value="Order.OrderStatus">
-                        @foreach (var status in StatusOptions)
+                    <MudSelect T="string" Label="Order Status" @bind-Value="SelectedOrderStatusAlias">
+                        @if (OrderStatusOptions?.Any() == true)
                         {
-                            <MudSelectItem Value="@status">@status</MudSelectItem>
+                            @foreach (var status in OrderStatusOptions)
+                            {
+                                <MudSelectItem Value="@status.Alias">@status.Name</MudSelectItem>
+                            }
+                        }                        
+                    </MudSelect>
+                    <MudSelect T="int" Label="Delivery Status" @bind-Value="SelectedDeliveryStatusId">
+                        @if (DeliveryStatusOptions?.Any() == true)
+                        {
+                            @foreach (var status in DeliveryStatusOptions)
+                            {
+                                <MudSelectItem Value="@status.Id">@status.Name</MudSelectItem>
+                            }
                         }
                     </MudSelect>
                     <MudTextField T="string" Label="Payment method" @bind-Value="Order.PaymentMethod" Disabled="true"/>
@@ -100,7 +116,10 @@
 @code {
     [Parameter] public Order Order { get; set; }
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    private List<string> StatusOptions = new List<string> { "Pending", "Dispatched", "Completed", "Shipped" };
+    private List<StatusModel> OrderStatusOptions = new List<StatusModel>();
+    private List<StatusModel> DeliveryStatusOptions = new List<StatusModel>();
+    private string SelectedOrderStatusAlias { get; set; }
+    private int SelectedDeliveryStatusId { get; set; }
     private string OrderIdString
     {
         get => Order.OrderId.ToString();
@@ -118,12 +137,110 @@
         get => Order.CardId.ToString();
         set => Order.CardId = Guid.TryParse(value, out var guid) ? guid : Guid.Empty;
     }
-    private async Task Save()
+
+    protected override async Task OnInitializedAsync()
     {
-        await OrderService.UpdateOrder(Order.OrderId, Order);
-        MudDialog.Close(DialogResult.Ok(true));
+        // Fetch order statuses
+        var listOfStatus = await StatusService.GetAllStatusInfo();
+        OrderStatusOptions = listOfStatus.Where(s => s.Type.Equals("Order", StringComparison.OrdinalIgnoreCase)).ToList();
+        DeliveryStatusOptions = listOfStatus.Where(s => s.Type.Equals("Delivery", StringComparison.OrdinalIgnoreCase)).ToList();
+
+        // Preselect the current order status
+        SelectedOrderStatusAlias = OrderStatusOptions
+       .FirstOrDefault(s => s.Name.Equals(Order.OrderStatus, StringComparison.OrdinalIgnoreCase))?.Alias;
+
+        SelectedDeliveryStatusId = DeliveryStatusOptions
+        .FirstOrDefault(s => s.Id == Order.ShippingInfo?.DeliveryStatusId)?.Id ?? 0;
     }
 
+
+    private async Task Save()
+    {
+        // Determine if there is a change in Order Status
+        var selectedOrderStatus = OrderStatusOptions.FirstOrDefault(s => s.Alias == SelectedOrderStatusAlias);
+        bool isOrderStatusUpdated = selectedOrderStatus != null && selectedOrderStatus.Name != Order.OrderStatus;
+
+        // Determine if there is a change in Delivery Status
+        var selectedDeliveryStatus = DeliveryStatusOptions.FirstOrDefault(ds => ds.Id == SelectedDeliveryStatusId);
+        bool isDeliveryStatusUpdated = selectedDeliveryStatus != null &&
+                                        Order.ShippingInfo != null &&
+                                        selectedDeliveryStatus.Name != Order.ShippingInfo.DeliveryStatus?.Name;
+
+        try
+        {
+            if (isOrderStatusUpdated && isDeliveryStatusUpdated)
+            {
+                // Both Order Status and Delivery Status are updated
+                Order.OrderStatus = selectedOrderStatus.Name;
+
+                // Fetch full details of the selected Delivery Status
+                var deliveryStatusDetails = await StatusService.GetStatusInfoById(SelectedDeliveryStatusId);
+                if (deliveryStatusDetails != null)
+                {
+                    Order.ShippingInfo.DeliveryStatusId = deliveryStatusDetails.Id;
+                    Order.ShippingInfo.DeliveryStatus = deliveryStatusDetails;
+                }
+
+                // Use combined API call
+                await OrderService.UpdateOrderStatusandShippingInfo(Order.OrderId, Order.OrderStatus, Order.ShippingInfo);
+            }
+            else if (isOrderStatusUpdated)
+            {
+                // Only Order Status is updated
+                Order.OrderStatus = selectedOrderStatus.Name;
+
+                // Call UpdateOrder API
+                await OrderService.UpdateOrder(Order.OrderId, Order);
+            }
+            else if (isDeliveryStatusUpdated)
+            {
+                // Only Delivery Status is updated
+                if (Order.ShippingInfo != null)
+                {
+                    // Fetch full details of the selected Delivery Status
+                    var deliveryStatusDetails = await StatusService.GetStatusInfoById(SelectedDeliveryStatusId);
+                    if (deliveryStatusDetails != null)
+                    {
+                        Order.ShippingInfo.DeliveryStatusId = deliveryStatusDetails.Id;
+                        Order.ShippingInfo.DeliveryStatus = deliveryStatusDetails;
+
+                        // Call UpdateShippingInfo API
+                        await OrderService.UpdateShippingInfo(Order.OrderId, Order.ShippingInfo);
+                    }
+                }
+            }
+            else
+            {
+                // No changes to save
+                Notification.Notify(new NotificationModel
+                    {
+                        Message = "No changes detected.",
+                        Type = NotificationMessageType.Info
+                    });
+                return;
+            }
+
+            // Notify success and close dialog
+            Notification.Notify(new NotificationModel
+                {
+                    Message = "Order information updated successfully.",
+                    Type = NotificationMessageType.Success
+                });
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            // Notify error
+            Notification.Notify(new NotificationModel
+                {
+                    Message = $"Failed to update order: {ex.Message}",
+                    Type = NotificationMessageType.Error
+                });
+        }
+    }
+
+
+    
     private void Cancel()
     {
         MudDialog.Cancel();

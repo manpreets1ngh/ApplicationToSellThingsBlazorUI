@@ -1,12 +1,9 @@
-﻿using System.Net.Http.Headers;
-using ApplicationToSellThing.BlazorUI.Models;
+﻿using ApplicationToSellThing.BlazorUI.Models;
 using ApplicationToSellThings.BlazorUI.Models;
 using ApplicationToSellThings.BlazorUI.Models.Orders;
 using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+using System.Net.Http.Headers;
 using System.Text.Json;
-using ApplicationToSellThings.BlazorUI.Store.State;
-using Fluxor;
-using Microsoft.AspNetCore.Components;
 
 namespace ApplicationToSellThings.BlazorUI.Services
 {
@@ -35,6 +32,7 @@ namespace ApplicationToSellThings.BlazorUI.Services
                 {
                     return new OrderResponseViewModel
                     {
+                        OrderNumber = responseData.Data.OrderNumber,
                         PaymentMethod = responseData.Data.PaymentMethod,
                         OrderStatus = responseData.Data.OrderStatus,
                         TotalAmount = responseData.Data.TotalAmount,
@@ -93,8 +91,40 @@ namespace ApplicationToSellThings.BlazorUI.Services
             }
             return null;
         }
-        
-        
+
+        public async Task<Order> GetOrderByOrderNumber(string orderNumber)
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = client.GetAsync($"/api/Orders/orderNumber/{orderNumber}");
+
+            if (result.Result.IsSuccessStatusCode)
+            {
+                try
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<Order>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Data;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = ex.Message,
+                        Type = NotificationMessageType.Error
+                    });
+                }
+            }
+            return null;
+        }
+
         public async Task<List<Order>> GetOrders()
         {
             var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
@@ -133,10 +163,10 @@ namespace ApplicationToSellThings.BlazorUI.Services
             return null;
         }
         
-        public async Task<Order> UpdateOrder(Guid id, Order order)
+        public async Task<Order> UpdateOrder(Guid orderId, Order order)
         {
             var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
-            var result = client.PutAsJsonAsync($"/api/Orders/{id}", order);
+            var result = client.PutAsJsonAsync<Order>($"/api/Orders/{orderId}", order);
 
             if (result.Result.IsSuccessStatusCode)
             {
@@ -163,6 +193,114 @@ namespace ApplicationToSellThings.BlazorUI.Services
                     });
                 }
             }
+            return null;
+        }
+
+
+        public async Task<ShippingInfoModel> UpdateShippingInfo(Guid orderId, ShippingInfoModel shippingInfoModel)
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = client.PutAsJsonAsync($"/api/Orders/{orderId}/shipping-info", shippingInfoModel);
+
+            if (result.Result.IsSuccessStatusCode)
+            {
+                try
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<ShippingInfoModel>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Data;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = ex.Message,
+                        Type = NotificationMessageType.Error
+                    });
+                }
+            }
+            return null;
+        }
+
+        public async Task<ShippingInfoModel> GetShippingInfo(Guid orderId)
+        {
+            var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+            var result = client.GetAsync($"/api/Orders/{orderId}/shipping-info");
+
+            if (result.Result.IsSuccessStatusCode)
+            {
+                try
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<ShippingInfoModel>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Data;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _notificationService.Notify(new NotificationModel
+                    {
+                        Message = ex.Message,
+                        Type = NotificationMessageType.Error
+                    });
+                }
+            }
+            return null;
+        }
+
+        public async Task<Order> UpdateOrderStatusandShippingInfo(Guid orderId, string newStatus, ShippingInfoModel? shippingInfo = null)
+        {
+            var payload = new
+            {
+                OrderStatus = newStatus,
+                ShippingInfo = shippingInfo
+            };
+
+            try
+            { 
+                var client = _httpClientFactory.CreateClient("ApplicationToSellthingsAPI");
+                var result = client.PutAsJsonAsync($"/api/Orders/{orderId}/status-and-shipping-info", payload);
+
+                if (result.Result.IsSuccessStatusCode)
+                {
+                    // Deserialize the response object into list of Products
+                    var content = result.Result.Content.ReadAsStringAsync();
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                    };
+                    var responseData = JsonSerializer.Deserialize<ResponseViewModel<Order>>(content.Result, options);
+                    if (responseData.Status == "Success" || responseData.StatusCode == 200)
+                    {
+                        return responseData.Data;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Notify the user about an exception
+                _notificationService.Notify(new NotificationModel
+                {
+                    Message = $"Error while updating order: {ex.Message}",
+                    Type = NotificationMessageType.Error
+                });
+            }
+
             return null;
         }
     }

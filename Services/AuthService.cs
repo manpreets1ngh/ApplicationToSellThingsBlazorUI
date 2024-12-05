@@ -82,10 +82,29 @@ namespace ApplicationToSellThings.BlazorUI.Services
             }
             else
             {
-                return new ResponseViewModel<string>() {
-                    Message = "API request not proceeeded...",
-                    Status = "Internal Server Error",
-                    StatusCode = 500
+                // Handle non-success status codes (e.g., 401, 404)
+                var errorContent = await result.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var errorResult = JsonSerializer.Deserialize<ResponseViewModel<string>>(errorContent, options);
+
+                if (result.StatusCode == System.Net.HttpStatusCode.NotFound && errorResult?.Message.Contains("The email you entered does not match any account. Please check your email and try again.") == true)
+                {
+                    // Return with a toast notification indicator
+                    return new ResponseViewModel<string>()
+                    {
+                        Status = "Error",
+                        StatusCode = (int)result.StatusCode,
+                        Message = errorResult.Message,
+                        Data = null
+                    };
+                }
+
+                return new ResponseViewModel<string>()
+                {
+                    Status = "Error",
+                    StatusCode = (int)result.StatusCode,    
+                    Message = errorResult?.Message ?? "Internal Server Error. Please try again later.",
+                    Data = null
                 };
             }
         }

@@ -1,0 +1,164 @@
+﻿@page "/checkout/order/newPurchaseDetail"
+@using ApplicationToSellThings.BlazorUI.Helper;
+@using ApplicationToSellThings.BlazorUI.Models.Orders;
+@using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Models.Products
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces;
+@using ApplicationToSellThings.BlazorUI.Services;
+@inject IOrderService OrderService
+@inject IAddressService AddressService
+@inject IState<AuthState> AuthState
+@inject UserDetailHelper UserHelper
+@inject NotificationService Notification
+@inject NavigationManager NavigationManager
+
+@if (order != null)
+{
+    <MudContainer MaxWidth="MaxWidth.Large" Class="order-container">
+        <div class="confirmation-container">
+            <h2 class="text-center">Thanks for your order!</h2>
+            <p class="text-center">An email was sent to <b>@UserInfo.Email</b> with your order details and info on how to track your parcel.</p>
+
+            <div class="order-summary">
+                <p class="text-center"><strong>Order number:</strong> @order.OrderNumber</p>
+                <p class="text-center"><strong>Placed on:</strong> @order.OrderCreatedAt?.ToString("dd MMM yyyy")</p>
+                <hr/>
+            </div>
+
+            
+            <div class="shipping-info">
+                <MudGrid>
+                    <MudItem xs="12" md="8">
+                        <div class="address-lines">
+                            <h5>We'll deliver it to:</h5>
+
+                            @if (order.OrderDetails.Any())
+                            {
+                                var billingAddress = GetAddressForOrderDetail(order.OrderDetails.FirstOrDefault().AddressId);
+                                if (billingAddress != null)
+                                {
+                                    <MudText Typo="Typo.body2">@billingAddress.Street</MudText>
+                                    <MudText Typo="Typo.body2">@($"{billingAddress.City}, {billingAddress.State} {billingAddress.PostCode}")</MudText>
+                                    <MudText Typo="Typo.body2">@billingAddress.Country</MudText>
+                                }
+                            }
+                        </div>
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <div class="delivery-date">
+                            <MudGrid>
+                                <MudItem xs="12" md="6">
+                                    <h5>Sent for delivery:</h5>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.body2" Class="mt-3">@order.ShippingInfo.DeliveryStatus.Name</MudText>
+                                </MudItem>
+                            </MudGrid>
+
+                        </div>
+                        <div class="delivery-date">
+                            <MudGrid>
+                                <MudItem xs="12" md="6">
+                                    <h5>You'll receive it by:</h5>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.body2"></MudText>
+                                </MudItem>
+                            </MudGrid>
+                        </div>
+                    </MudItem>
+                </MudGrid>            
+            </div>
+            <hr/>
+            <div class="order-details">
+                <h5 class="mb-3">You'll receive:</h5>
+                @foreach(var orderDetail in order.OrderDetails)
+                {
+                    <MudGrid>   
+                        <MudItem xs="12" md="3">
+                            @if (orderDetail.Product.ProductImage != null && orderDetail.Product.ProductImage.Length > 0)
+                            {
+                                <MudAvatar Image="@($"data:image/png;base64,{Convert.ToBase64String(orderDetail.Product.ProductImage)}")" Size="Size.Medium" />
+                            }
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudText Typo="Typo.body1">@orderDetail.Product.ProductName</MudText>
+                            <br/>
+                            <MudText Typo="Typo.body1">Qty: @orderDetail.Quantity</MudText>
+
+                        </MudItem>
+                        <MudItem xs="12" md="3">
+                            <MudText Align="Align.Right" Typo="Typo.body1">£@orderDetail.Total</MudText>
+
+                        </MudItem>
+                    </MudGrid>
+                    <hr/>
+                }
+            </div>
+
+            <div class="price-summary">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.body1">SubTotal</MudText>
+                        <MudText Typo="Typo.body1">Standard Delivery</MudText>
+                        <MudText Typo="Typo.h6">Total to pay</MudText>
+
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.body1" Align="Align.Right">£@order.TotalAmount</MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Right">£0</MudText>
+                        <MudText Typo="Typo.h6" Align="Align.Right">£@order.TotalAmount</MudText>
+
+                    </MudItem>
+                </MudGrid>
+               
+            </div>
+
+            <div class="row">
+                <div class="d-flex justify-content-center align-content-center mt-3 mb-4">
+                    <button class="btn-continueShopping" @onclick="ContinueShopping"><MudText >Continue Shopping</MudText></button>
+                </div>
+            </div>
+
+        </div>
+    </MudContainer>
+}
+else
+{
+    <p class="text-danger">Order not found.</p>
+}
+
+
+@code{
+    [Parameter] public string trackingNumber { get; set; }
+    private Order order;
+    private UserDetail UserInfo { get; set; }
+    private List<AddressViewModel> UserAddresses { get; set; } = new List<AddressViewModel>();
+    private Guid userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserInfo = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        userId = Guid.Parse(UserInfo.Id);
+        UserAddresses = await AddressService.GetAddressByUser(userId);
+
+        if (query.TryGetValue("trackingNumber", out var trackingNumberValue))
+        {
+            trackingNumber = trackingNumberValue;
+            // Fetch order details based on the tracking number (Order number)
+            order = await OrderService.GetOrderByOrderNumber(trackingNumber);
+        }
+    }
+
+    private AddressViewModel GetAddressForOrderDetail(Guid addressId)
+    {
+        return UserAddresses.FirstOrDefault(a => a.Id == addressId);
+    }
+
+    private void ContinueShopping()
+    {
+        NavigationManager.NavigateTo("/products");
+    }
+}

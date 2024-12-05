@@ -25,6 +25,8 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IStatusService, StatusService>();
+builder.Services.AddScoped<IResetForgotPasswordService, ResetForgotPasswordService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<UserDetailHelper>();
 builder.Services.AddHttpContextAccessor();
@@ -90,5 +92,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
+app.Use(async (context, next) =>
+{
+    if (context.Response.StatusCode == 403) // Forbidden
+    {
+        context.Response.Redirect("/accessdenied");
+    }
+    else if (context.Response.StatusCode == 401) // Unauthorized
+    {
+        context.Response.Redirect("/auth/login"); // Or another login page
+    }
+    else
+    {
+        await next();
+    }
+});
 app.Run();

@@ -1,5 +1,4 @@
 ﻿@page "/Orders/PlaceOrder"
-@attribute [Authorize]
 @attribute [Authorize(Roles = "User")]
 
 @using ApplicationToSellThings.BlazorUI.Helper;
@@ -9,6 +8,7 @@
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 @using ApplicationToSellThings.BlazorUI.Services;
 @using ApplicationToSellThings.BlazorUI.Store.Action;
+@using ApplicationToSellThings.BlazorUI.Store.Action.CartActions
 @inject NavigationManager NavigationManager
 @inject IProductsService ProductService
 @inject IAddressService AddressService
@@ -19,8 +19,8 @@
 @inject IState<CheckoutState> CheckoutState
 @inject UserDetailHelper UserHelper
 @inject NotificationService Notification
+@inject IJSRuntime JS
 
-<h3>Checkout</h3>
 @if (!string.IsNullOrEmpty(errorMessage))
 {
         <p class="text-danger">@errorMessage</p>
@@ -30,39 +30,196 @@
         <div class="row">
             <div class="col-lg-7">
                 <div class="form-check mb-3">
-                    <h5>Delivery Address</h5>
-                    <div class="row">
-                        <div class="col-8 custom-select-wrapper">
-                            <MudSelect T="AddressViewModel" Label="Select your address" ValueChanged="@OnAddressSelected">
-                                @if (Addresses.Any())
-                                {
-                                    foreach (var address in Addresses)
+                    <MudCard Style="border-radius: 10px;">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mt-1 mb-3">Delivery Address</MudText>
+
+                            @if(selectedAddress != null)
+                            {
+                                <div class="address-display">
+                                    <p>@UserInfo.UserName</p>
+                                    <p>@selectedAddress.Street</p>
+                                    <p>@selectedAddress.City, @selectedAddress.State, @selectedAddress.PostCode</p>
+                                    <p>@selectedAddress.Country</p>
+                                    
+                                </div>
+                            }
+                            else
+                            {
+                                <MudSelect Class="mb-3" T="AddressViewModel" Label="Select your address" ValueChanged="@OnAddressSelected">
+                                    @if (Addresses.Any())
                                     {
-                                        <MudSelectItem Value="@address">@address.Street, @address.City, @address.Country</MudSelectItem>
+                                        foreach (var address in Addresses)
+                                        {
+                                            <MudSelectItem Value="@address">@address.Street, @address.City, @address.Country</MudSelectItem>
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewAddressSelected">Add Delivery Address</MudButton>
-                                }
-                            </MudSelect>
+                                    else
+                                    {
+                                        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewAddressSelected">Add Delivery Address</MudButton>
+                                    }
+                                </MudSelect>
+                            }
+                            
+
+
                             @if (showAddNewAddress)
                             {
                                 <EditForm Model="newAddress" OnValidSubmit="HandleAddNewAddress">
+                                    <DataAnnotationsValidator />
                                     <MudTextField id="street" @bind-Value="newAddress.Street" Class="mt-2" Label="Street" For="@(() => newAddress.Street)" />
-                                    <MudTextField id="city" @bind-Value="newAddress.City" class="form-control" Label="City" For="@(() => newAddress.City)" />
-                                    <MudTextField id="state" @bind-Value="newAddress.State" class="form-control" Label="State" For="@(() => newAddress.State)" />
-                                    <MudTextField id="postcode" @bind-Value="newAddress.PostCode" class="form-control" Label="Post Code" For="@(() => newAddress.PostCode)" />
-                                    <MudTextField id="country" @bind-Value="newAddress.Country" class="form-control" Label="Country" For="@(() => newAddress.Country)" />
-                                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save Address</MudButton>
+                                    <MudTextField id="city" @bind-Value="newAddress.City" Class="mt-2" Label="City" For="@(() => newAddress.City)" />
+                                    <MudTextField id="state" @bind-Value="newAddress.State" Class="mt-2" Label="State" For="@(() => newAddress.State)" />
+                                    <MudTextField id="postcode" @bind-Value="newAddress.PostCode" Class="mt-2" Label="Post Code" For="@(() => newAddress.PostCode)" />
+                                    <MudTextField id="country" @bind-Value="newAddress.Country" Class="mt-2" Label="Country" For="@(() => newAddress.Country)" />
+                                    <div class="form-group align-center mt-4">
+                                        <button class=" btn-delivery-card" type="submit">Save Address</button>
+                                    </div>
+                                </EditForm>
+                            }
+
+
+                        </MudCardContent>
+                    </MudCard>
+                   @*  <h5>Delivery Address</h5>
+                    <div class="row">
+                        <div class="col-8 custom-select-wrapper">
+                            @if(selectedAddress != null)
+                            {
+                                <div class="address-display">
+                                    <p>@UserInfo.UserName</p>
+                                    <p>@selectedAddress.Street</p>
+                                    <p>@selectedAddress.City, @selectedAddress.State, @selectedAddress.PostCode</p>
+                                    <p>@selectedAddress.Country</p>
+                                    
+                                </div>
+                            }
+                            else
+                            {
+                                <MudSelect T="AddressViewModel" Label="Select your address" ValueChanged="@OnAddressSelected">
+                                    @if (Addresses.Any())
+                                    {
+                                        foreach (var address in Addresses)
+                                        {
+                                            <MudSelectItem Value="@address">@address.Street, @address.City, @address.Country</MudSelectItem>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewAddressSelected">Add Delivery Address</MudButton>
+                                    }
+                                </MudSelect>
+                            }
+                            
+
+
+                            @if (showAddNewAddress)
+                            {
+                                <EditForm Model="newAddress" OnValidSubmit="HandleAddNewAddress">
+                                    <DataAnnotationsValidator />
+                                    <MudTextField id="street" @bind-Value="newAddress.Street" Class="mt-2" Label="Street" For="@(() => newAddress.Street)" />
+                                    <MudTextField id="city" @bind-Value="newAddress.City" Class="mt-2" Label="City" For="@(() => newAddress.City)" />
+                                    <MudTextField id="state" @bind-Value="newAddress.State" Class="mt-2" Label="State" For="@(() => newAddress.State)" />
+                                    <MudTextField id="postcode" @bind-Value="newAddress.PostCode" Class="mt-2" Label="Post Code" For="@(() => newAddress.PostCode)" />
+                                    <MudTextField id="country" @bind-Value="newAddress.Country" Class="mt-2" Label="Country" For="@(() => newAddress.Country)" />
+                                    <div class="form-group align-center mt-4">
+                                        <button class=" btn-delivery-card" type="submit">Save Address</button>
+                                    </div>
                                 </EditForm>
                             }
 
                         </div>
-                    </div>
+                    </div> *@
                     <br/>
                     <br/>
-                    <h5>Payment Method</h5>
+                    <MudCard Style="border-radius: 10px;">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mt-1 mb-3">Payment Method</MudText>
+
+                            <MudGrid Spacing="2">
+                                <!-- Pay by Cash -->
+                                <MudItem xs="6">
+                                    <MudCard @onclick="@SetPaymentOptionToCash" Class="@(paymentOption == "cash" ? "card-selected" : "card-unselected")">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6" Align="Align.Center">Pay by Cash</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+
+                                <!-- Pay by Card -->
+                                <MudItem xs="6">
+                                    <MudCard @onclick="@SetPaymentOptionToCard" Class="@(paymentOption == "card" ? "card-selected" : "card-unselected")">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.h6" Align="Align.Center">Pay by Card</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+
+                            <div class="row">
+                                <div class="col-8">
+                                    @if (CheckoutState.Value.PaymentOption == "card")
+                                    {
+                                        @if (selectedCard != null)
+                                        {
+                                            <div class="card-display">
+                                                <p>Cardholder Name: @selectedCard.CardHolderName</p>
+                                                <p>Card Number: **** **** **** @selectedCard.CardNumber.Substring(@selectedCard.CardNumber.Length - 4)</p>
+                                                <p>Expired On: @selectedCard.ExpiryDate.ToString("MM/yy")</p>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <MudSelect T="CardDetail" Class="mt-3 mb-4" Label="Select Card" ValueChanged="@OnCardSelected">
+                                                @if (CardDetails.Any())
+                                                {
+                                                    foreach (var card in CardDetails)
+                                                    {
+                                                        <MudSelectItem Value="@card">@($"**** **** **** {card.CardNumber.Substring(card.CardNumber.Length - 4)}")</MudSelectItem>
+
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewCardForPayment">Add New Card</MudButton>
+                                                }
+                                            </MudSelect>
+                                        }
+
+
+                                        @if (showAddNewCard)
+                                        {
+                                            <EditForm Model="newCardDetails" OnValidSubmit="HandleAddCard">
+                                                <DataAnnotationsValidator />
+                                                <MudTextField T="string" id="cardholdername" @bind-Value="newCardDetails.CardHolderName" Class="mt-2" Label="CardHolder Name" For="@(() => newCardDetails.CardHolderName)" />
+
+                                                <MudTextField T="string" id="cardnumber" @bind-Value="CardNumberFormatted " Class="mt-2" Label="Card Number"
+                                                              Immediate="true" OnInput="@OnCardNumberInput" For="@(() => newCardDetails.CardNumber)" />
+
+                                                <MudTextField T="string" id="expirydate" @bind-Value="ExpiryDateString" Class="mt-2" Label="Expiry Date"
+                                                              Placeholder="MM/YYYY" OnBlur="FormatExpiryDate" OnChange="@FormatExpiryDate" />
+
+                                                <MudTextField T="int" id="cvv" @bind-Value="newCardDetails.Cvv" Class="mt-2" Label="Cvv" For="@(() => newCardDetails.Cvv)" />
+
+                                                <div class="form-group justify-content-center mt-4">
+                                                    <button class=" btn-delivery-card" type="submit">Save Card</button>
+                                                </div>
+                                            </EditForm>
+                                        }
+
+                                    }
+                                    else if (CheckoutState.Value.PaymentOption == "cash")
+                                    {
+                                        <div class="mt-4">
+                                            <p>You have chosen to pay by cash. No further information is required.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                        </MudCardContent>
+                    </MudCard>
+                   @*  <h5>Payment Method</h5>
                     <div class="row">
                         <div class="col-8">
                             <div role="group" aria-label="Payment Method">
@@ -78,34 +235,55 @@
                                 </button>
                             </div>
                         </div>                     
-                    </div>
-                    <div class="row">
+                    </div> *@
+                    @* <div class="row">
                         <div class="col-8">
                             @if (CheckoutState.Value.PaymentOption == "card")
                             {
-                                <MudSelect T="CardDetail" Label="Select Card" ValueChanged="@OnCardSelected">
-                                    @if (CardDetails.Any())
-                                    {
-                                        foreach (var card in CardDetails)
+                                @if(selectedCard != null)
+                                {
+                                    <div class="card-display">
+                                        <p>Cardholder Name: @selectedCard.CardHolderName</p>
+                                        <p>Card Number: **** **** **** @selectedCard.CardNumber.Substring(@selectedCard.CardNumber.Length - 4)</p>
+                                        <p>Expired On: @selectedCard.ExpiryDate.ToString("MM/yy")</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <MudSelect T="CardDetail" Label="Select Card" ValueChanged="@OnCardSelected">
+                                        @if (CardDetails.Any())
                                         {
-                                            <MudSelectItem Value="@card">@($"**** **** **** {card.CardNumber.Substring(card.CardNumber.Length - 4)}")</MudSelectItem>
+                                            foreach (var card in CardDetails)
+                                            {
+                                                <MudSelectItem Value="@card">@($"**** **** **** {card.CardNumber.Substring(card.CardNumber.Length - 4)}")</MudSelectItem>
 
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewCardForPayment">Add New Card</MudButton>
-                                    }
-                                </MudSelect>
+                                        else
+                                        {
+                                            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Default" Class="ml-auto" OnClick="@AddNewCardForPayment">Add New Card</MudButton>
+                                        }
+                                    </MudSelect>
+                                }
+                                
 
                                 @if (showAddNewCard)
                                 {
                                     <EditForm Model="newCardDetails" OnValidSubmit="HandleAddCard">
-                                        <MudTextField id="cardholdername" @bind-Value="newCardDetails.CardHolderName" class="form-control" Label="CardHolder Name" For="@(() => newCardDetails.CardHolderName)" />
-                                        <MudTextField id="cardnumber" @bind-Value="newCardDetails.CardNumber" class="form-control" Label="Card Number" For="@(() => newCardDetails.CardNumber)" />
-                                        <MudTextField id="expirydate" @bind-Value="newCardDetails.ExpiryDate" class="form-control" Label="Expiry Date" For="@(() => newCardDetails.ExpiryDate)" />
-                                        <MudTextField id="cvv" @bind-Value="newCardDetails.Cvv" class="form-control" Label="Cvv" For="@(() => newCardDetails.Cvv)" />
-                                        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Save Card</MudButton>
+                                        <DataAnnotationsValidator />
+                                        <MudTextField T="string" id="cardholdername" @bind-Value="newCardDetails.CardHolderName" Class="mt-2" Label="CardHolder Name" For="@(() => newCardDetails.CardHolderName)" />
+
+                                        <MudTextField T="string" id="cardnumber" @bind-Value="CardNumberFormatted " Class="mt-2" Label="Card Number"
+                                                      Immediate="true" OnInput="@OnCardNumberInput" For="@(() => newCardDetails.CardNumber)" />
+
+                                        <MudTextField T="string" id="expirydate" @bind-Value="ExpiryDateString" Class="mt-2" Label="Expiry Date"
+                                                      Placeholder="MM/YYYY" OnBlur="FormatExpiryDate" OnChange="@FormatExpiryDate" />
+
+                                        <MudTextField T="int" id="cvv" @bind-Value="newCardDetails.Cvv" Class="mt-2" Label="Cvv" For="@(() => newCardDetails.Cvv)" />
+
+                                        <div class="form-group justify-content-center mt-4">
+                                            <button class=" btn-delivery-card" type="submit">Save Card</button>
+                                        </div>
                                     </EditForm>
                                 }
 
@@ -117,7 +295,7 @@
                                 </div>
                             }
                         </div>
-                    </div>
+                    </div> *@
                     <br>
                 </div>
             </div>
@@ -199,6 +377,7 @@
 
 @code {
     private ProductViewModel ProductViewModel { get; set; }
+    private UserDetail UserInfo { get; set; }
     private string errorMessage = string.Empty;
     private AddressViewModel selectedAddress;
     private List<AddressViewModel> Addresses = new List<AddressViewModel>();
@@ -215,6 +394,30 @@
     private CardRequestModel newCardDetails = new CardRequestModel();
     private OrderRequestModel OrderRequest = new OrderRequestModel();
     private int AvailableQuantityForTheProduct;
+    private string ExpiryDateString { get; set; }
+    private string CardNumberFormatted
+    {
+        get => FormatCardNumberForDisplay(newCardDetails.CardNumber);
+        set => newCardDetails.CardNumber = FormatForStorage(value);
+    }
+    private DateTime FormattedExpiryDate
+    {
+        get
+        {
+            // Try to parse the string into a DateTime object
+            if (DateTime.TryParseExact(ExpiryDateString, "MM/yy", null, System.Globalization.DateTimeStyles.None, out var date))
+            {
+                // Return a DateTime with the first day of the month
+                return new DateTime(date.Year, date.Month, 1);
+            }
+            return DateTime.MinValue; // Return a default value if parsing fails
+        }
+        set
+        {
+            // Format the DateTime object back into MM/YY for display
+            ExpiryDateString = value.ToString("MM/yy");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -278,12 +481,12 @@
                 errorMessage = "Product ID(s) or quantities not specified.";
             }
 
-            var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
-            UserId = Guid.Parse(userDetail.Id);
+            UserInfo = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+            UserId = Guid.Parse(UserInfo.Id);
 
             CheckoutState.Value.SelectedProducts = selectedProducts;
             CheckoutState.Value.Quantities = quantities;
-            
+
             Dispatcher.Dispatch(new FetchAddressesForUserAction(UserId));
             Dispatcher.Dispatch(new FetchCardsForUserAction(UserId));
 
@@ -302,10 +505,11 @@
                 false,
                 errorMessage
             );
-            
+
             Dispatcher.Dispatch(new UpdateCheckoutStateAction(checkoutState));
         }        
     }
+
 
     private async Task OnAddressSelected(AddressViewModel address)
     {
@@ -327,6 +531,8 @@
     private void AddNewAddressSelected()
     {
         showAddNewAddress = true;
+        newAddress = new AddressRequestModel(); // Clear the form
+        StateHasChanged();
     }
 
     private void AddNewCardForPayment()
@@ -370,8 +576,21 @@
             };
 
         Dispatcher.Dispatch(new AddNewAddressAction(addressRequest));
+        await LoadAddresses();
         showAddNewAddress = false;
         StateHasChanged();
+    }
+
+    private async Task LoadAddresses()
+    {
+        // Logic to reload the addresses (e.g., from a service or state)
+        Dispatcher.Dispatch(new FetchAddressesForUserAction(UserId));
+    }
+
+
+    private async Task LoadCardDetail()
+    {
+        Dispatcher.Dispatch(new FetchCardsForUserAction(UserId));
     }
 
     private void SetPaymentOptionToCash()
@@ -399,7 +618,7 @@
     {
         var quantities = new Dictionary<string, int>(CheckoutState.Value.Quantities);
         quantities[productId] = quantity;
-        
+
         var totalPrice = CheckoutState.Value.SelectedProducts.Sum(p => p.Price * quantities[p.ProductId.ToString()]);
 
         var updatedState = new CheckoutState(
@@ -419,8 +638,55 @@
         Dispatcher.Dispatch(new UpdateCheckoutStateAction(updatedState));
     }
 
+    private void FormatExpiryDate()
+    {
+        if (string.IsNullOrEmpty(ExpiryDateString))
+            return;
+
+        // Remove any non-digit characters
+        var digitsOnly = new string(ExpiryDateString.Where(char.IsDigit).ToArray());
+
+        if (digitsOnly.Length == 4)
+        {
+            // Format as MM/YYYY
+            ExpiryDateString = $"{digitsOnly.Substring(0, 2)}/{digitsOnly.Substring(2, 2)}";
+        }
+        else if (digitsOnly.Length == 6)
+        {
+            // If a user enters all digits including the year
+            ExpiryDateString = $"{digitsOnly.Substring(0, 2)}/{digitsOnly.Substring(2)}";
+        }
+    }
+
+    private void OnCardNumberInput(ChangeEventArgs e)
+    {
+        var input = e.Value.ToString();
+        newCardDetails.CardNumber = FormatForStorage(input);
+        CardNumberFormatted = FormatCardNumberForDisplay(newCardDetails.CardNumber);
+    }
+
+    private string FormatCardNumberForDisplay(string cardNumber)
+    {
+        if (string.IsNullOrWhiteSpace(cardNumber))
+            return string.Empty;
+
+        // Remove existing spaces first
+        var digitsOnly = new string(cardNumber.Where(char.IsDigit).ToArray());
+
+        // Insert spaces every 4 digits
+        return string.Join(" ", Enumerable.Range(0, digitsOnly.Length / 4)
+                                          .Select(i => digitsOnly.Substring(i * 4, Math.Min(4, digitsOnly.Length - i * 4))));
+    }
+
+    private string FormatForStorage(string input)
+    {
+        // Remove all spaces to store the number as a continuous string of digits
+        return new string(input.Where(char.IsDigit).ToArray());
+    }
+
     private async Task HandleAddCard()
     {
+        newCardDetails.ExpiryDate = FormattedExpiryDate;
         var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
         var cardRequest = new CardRequestModel
             {
@@ -433,6 +699,7 @@
 
         // Logic to call a service and add the new card
         Dispatcher.Dispatch(new AddNewCardAction(cardRequest));
+        await LoadCardDetail();
         showAddNewCard = false;
         StateHasChanged();
     }
@@ -465,9 +732,13 @@
             };
 
             Notification.Notify(notificationMessage);
+            var trackingNumber = order.OrderNumber; // Assuming `OrderNumber` is part of the order model
+            var confirmationUrl = $"/checkout/order/newPurchaseDetail?trackingNumber={trackingNumber}";
+
             await InvokeAsync(() =>
             {
-                NavigationManager.NavigateTo("/orders");
+                Dispatcher.Dispatch(new ClearCartAction()); // Dispatch an action to clear the cart
+                NavigationManager.NavigateTo(confirmationUrl);
                 StateHasChanged();
             });
         }
@@ -483,4 +754,5 @@
             await InvokeAsync(StateHasChanged);
         }
     }
+
 }

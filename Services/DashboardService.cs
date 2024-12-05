@@ -31,6 +31,19 @@ public class DashboardService : IDashboardService
         }
         
         var ordersList = await _orderService.GetOrders();
+        if (ordersList == null || !ordersList.Any())
+        {
+            // Return default empty metrics if no orders are available
+            return new DashboardMetrics
+            {
+                TotalSales = 0,
+                TotalOrders = 0,
+                TotalCustomers = 0,
+                TotalRevenue = 0,
+                SalesTrends = new List<ChartSeries>(),
+                TotalProducts = 0
+            };
+        }
         var orders = ordersList.Where(o => o.OrderCreatedAt >= startDate && o.OrderCreatedAt <= endDate)
             .ToList();
         var products = await _productService.GetProductsAsync();

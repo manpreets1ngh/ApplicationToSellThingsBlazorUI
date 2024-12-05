@@ -2,9 +2,11 @@
 @using ApplicationToSellThings.BlazorUI.Helper;
 @using ApplicationToSellThings.BlazorUI.Models.Orders;
 @using ApplicationToSellThings.BlazorUI.Models;
+@using ApplicationToSellThings.BlazorUI.Models.Products
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 @using ApplicationToSellThings.BlazorUI.Services;
 @inject IOrderService OrderService
+@inject IAddressService AddressService
 @inject IState<AuthState> AuthState
 @inject UserDetailHelper UserHelper
 @inject NotificationService Notification
@@ -13,62 +15,99 @@
 {
     <p class="text-danger">@errorMessage</p>
 }
-<section class="gradient-custom">
-    <div class="container py-5 h-100">
-        <div class="row">
-            <MudTable Items="@OrdersList.Take(OrdersList.Count)" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info">
-                <HeaderContent>
-                    <MudTh>Product</MudTh>
-                    <MudTh>Price</MudTh>
-                    <MudTh>Quantity</MudTh>
-                    <MudTh>Total</MudTh>
-                    <MudTh>Order Status</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    @if (context.OrderDetails.Count > 1)
-                    {
-                        <MudTr>
-                            <MudExpansionPanels>
-                                <MudExpansionPanel Text="Products">
-                                    @foreach (var detail in context.OrderDetails)
-                                    {
-                                        <MudTr>
-                                                <MudTd DataLabel="ProductName">@detail.Product.ProductName</MudTd>
-                                                <MudTd DataLabel="ProductPrice">@detail.Product.Price</MudTd>
-                                                <MudTd DataLabel="Quantity">@detail.Quantity</MudTd>
-                                        </MudTr>
+<section class="order-section">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="order-container">
+        
+        @if (OrdersList.Count > 0)
+        {
+            @foreach (var order in OrdersList)
+            {
+                <div class="order-card">
+                    <MudGrid>
+                        <!-- Left Side: Order Details -->
+                        <MudItem xs="12" md="8">
+                            <div class="order-details">
+                                <h5>Order #@order.OrderNumber</h5>
+                                <p>Placed on @order.OrderCreatedAt?.ToString("MMMM dd, yyyy hh:mm tt")</p>
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudText Typo="Typo.body1" Class="order-status"><b>Order Status - @order.OrderStatus</b></MudText>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudText Typo="Typo.body1" Class="delivery-status"><b>Delivery Status - @order.ShippingInfo.DeliveryStatus.Name</b></MudText>
+                                    </MudItem>
+
+                                </MudGrid>
+                                
+                                <MudTable Items="@order.OrderDetails" Hover="true" Class="order-products-table">
+                                    <HeaderContent>
+                                        <MudTh></MudTh>
+                                        <MudTh>Product</MudTh>
+                                        <MudTh>Product Price</MudTh>
+                                        <MudTh>Quantity Ordered</MudTh>
+                                        <MudTh>Total</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="Product Image">
+                                            @if (context.Product.ProductImage != null && context.Product.ProductImage.Length > 0)
+                                            {
+                                                <MudAvatar Image="@($"data:image/png;base64,{Convert.ToBase64String(context.Product.ProductImage)}")" Size="Size.Medium" />
+                                            }
+                                            else
+                                            {
+                                                <MudAvatar Icon="@Icons.Material.Filled.ImageNotSupported" Size="Size.Medium" />
+                                            }
+                                        </MudTd>
+                                        <MudTd DataLabel="Product Name">@context.Product.ProductName</MudTd>
+                                        <MudTd DataLabel="Product Price">£@context.Product.Price</MudTd>
+                                        <MudTd DataLabel="Quantity Ordered">@context.Quantity</MudTd>
+                                        <MudTd DataLabel="Total">£@context.Total</MudTd>
+                                    </RowTemplate>
                                     
-                                    }                                    
-                                </MudExpansionPanel>
-                            </MudExpansionPanels>
-                            
-                        </MudTr>                        
-                     
-                    }
-                    else
-                    {
-                        @foreach (var orderDetail in @context.OrderDetails)
-                        {
-                                <MudTd DataLabel="ProductName">@orderDetail.Product.ProductName</MudTd>
-                                <MudTd DataLabel="ProductPrice">@orderDetail.Product.Price</MudTd>
-                                <MudTd DataLabel="Quantity">@orderDetail.Quantity</MudTd>
-                            
-                        }
-                    }
+                                </MudTable>
+                            </div>
+                        </MudItem>
 
-                    <MudTd DataLabel="Total">
-                        @context.TotalAmount
-                    </MudTd>
-                    <MudTd DataLabel="OrderStatus">
-                        @context.OrderStatus
-                    </MudTd>
-                    
-                </RowTemplate>
-            </MudTable>
-        </div>
-    </div>
+                        <!-- Right Side: Billing and Shipping Address -->
+                        <MudItem xs="12" md="4">
+                            <MudText Typo="Typo.h6">Billing Address</MudText>
+                            <div class="address-lines">
+                                @if (order.OrderDetails.Any())
+                                {
+                                    var billingAddress = GetAddressForOrderDetail(order.OrderDetails.FirstOrDefault().AddressId);
+                                    if (billingAddress != null)
+                                    {
+                                        <MudText Typo="Typo.body2">@billingAddress.Street</MudText>
+                                        <MudText Typo="Typo.body2">@($"{billingAddress.City}, {billingAddress.State} {billingAddress.PostCode}")</MudText>
+                                        <MudText Typo="Typo.body2">@billingAddress.Country</MudText>
+                                    }
+                                }
+                            </div>
+
+                            <MudText Typo="Typo.h6" Class="mt-4">Shipping Address</MudText>
+                            <div class="address-lines">
+                                @if (order.OrderDetails.Any())
+                                {
+                                    var shippingAddress = GetAddressForOrderDetail(order.OrderDetails.FirstOrDefault().AddressId);
+                                    if (shippingAddress != null)
+                                    {
+                                        <MudText Typo="Typo.body2">@shippingAddress.Street</MudText>
+                                        <MudText Typo="Typo.body2">@($"{shippingAddress.City}, {shippingAddress.State} {shippingAddress.PostCode}")</MudText>
+                                        <MudText Typo="Typo.body2">@shippingAddress.Country</MudText>
+                                    }
+                                }
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </div>
+            }
+        }
+        else
+        {
+            <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mt-3">The orders list is empty...</MudText>
+        }
+    </MudContainer>
 </section>
-
 
 @code {
     
@@ -78,6 +117,9 @@
     private string errorMessage = string.Empty;
     private List<Order> OrdersList { get; set; }
     private OrderDetail OrderDetail { get; set; }
+    private UserDetail UserInfo { get; set; }
+    private Product ProductDetail { get; set; }
+    private List<AddressViewModel> UserAddresses { get; set; } = new List<AddressViewModel>();
     private bool _loading;
     private Guid userId;
     private string productName;
@@ -86,13 +128,20 @@
     {
         if (AuthState.Value.IsAuthenticated)
         {
-            var userDetail = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
-            userId = Guid.Parse(userDetail.Id);
-            OrdersList = await OrderService.GetOrdersListForUser(userId);
-            
-            if (OrdersList == null)
+            UserInfo = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+            userId = Guid.Parse(UserInfo.Id);
+            var fetchedOrders = await OrderService.GetOrdersListForUser(userId);
+            // Fetch addresses for the user
+            UserAddresses = await AddressService.GetAddressByUser(userId);
+            if (fetchedOrders != null)
             {
-                
+                OrdersList = fetchedOrders
+                .OrderByDescending(order => order.OrderCreatedAt)
+                .ToList();
+            }
+            else
+            {
+                OrdersList = new List<Order>(); // Initialize to avoid null reference
             }
         }
         
@@ -105,5 +154,8 @@
         return (DateTime.UtcNow - orderCreatedAt.Value).TotalDays <= 1;
     }
 
-
+    private AddressViewModel GetAddressForOrderDetail(Guid addressId)
+    {
+        return UserAddresses.FirstOrDefault(a => a.Id == addressId);
+    }
 }

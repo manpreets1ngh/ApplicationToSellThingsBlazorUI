@@ -41,4 +41,11 @@ public class CartReducer
                 : i).ToList();
         return new CartState(updatedItems);
     }
+
+    [ReducerMethod]
+    public static CartState ReduceClearCartAction(CartState state, ClearCartAction action)
+    {
+        return new CartState(new List<CartItem>());
+
+    }
 }

@@ -4,6 +4,7 @@ namespace ApplicationToSellThings.BlazorUI.Models.Orders
 {
     public class OrderResponseViewModel
     {
+        public string OrderNumber { get; set; }
         public string PaymentMethod { get; set; }
         public decimal TotalAmount { get; set; }
         public decimal Tax { get; set; }

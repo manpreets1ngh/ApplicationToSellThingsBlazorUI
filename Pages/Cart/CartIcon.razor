@@ -3,14 +3,33 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<a class="nav-link position-relative" href="javascript:void(0);" @onclick="NavigateToCheckout">
-    <span class="oi oi-cart" aria-hidden="true"></span>
-    <span class="badge badge-pill badge-danger position-absolute top-0 start-100 translate-middle">
-        @CartState.Value.Items.Sum(item => item.Quantity)
-    </span>
+<a @onclick="NavigateToCheckout" style="cursor: pointer;" @onclick:preventDefault>
+    @if (CartState.Value.Items.Sum(i => i.Quantity) > 0)
+    {
+        <MudBadge Content="@CartState.Value.Items.Sum(i => i.Quantity)" Color="Color.Warning" Class="mt-2">
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Dark" />
+        </MudBadge>
+    }
+    else
+    {
+        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Color="Color.Dark" Class="mt-2"/>
+    }
 </a>
 
 @code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to state changes so that the component updates automatically
+        CartState.StateChanged += OnCartStateChanged;
+    }
+
+    private void OnCartStateChanged(object sender, EventArgs e)
+    {
+        // Update the UI when the cart state changes
+        StateHasChanged();
+    }
+
     private async Task NavigateToCheckout()
     {
         
@@ -22,5 +41,11 @@
         {
             NavigationManager.NavigateTo("/login");
         }
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe when the component is disposed
+        CartState.StateChanged -= OnCartStateChanged;
     }
 }

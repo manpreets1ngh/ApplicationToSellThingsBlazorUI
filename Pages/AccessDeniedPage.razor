@@ -1,0 +1,25 @@
+﻿@page "/auth/accessdenied"
+
+<h3>Access Denied</h3>
+<p>You do not have the necessary permissions to access this page.</p>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToHome">
+    Go to Home
+</MudButton>
+<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="NavigateToLogin">
+    Log in with a different account
+</MudButton>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; }
+
+    private void NavigateToHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/auth/login");
+    }
+}

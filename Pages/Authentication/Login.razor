@@ -40,20 +40,32 @@ else
                                 <EditForm Model="@LoginUser" OnValidSubmit="OnValidSubmit">
                                     <DataAnnotationsValidator/>
                                     <div class="form-group floating-label">
-                                        <MudTextField Class="input-fields" Label="Email" @bind-Value="@LoginUser.Email" Required="true" RequiredError="Email is required" For="@(() => LoginUser.Email)"></MudTextField>
+                                        <MudTextField Class="input-fields" Label="Email" @bind-Value="@LoginUser.Email" Required="true" RequiredError="Email is required" For="@(() => LoginUser.Email)">
+                                            <ValidationMessage For="@(() => LoginUser.Email)" />
+                                        </MudTextField>
+                                        @if (!string.IsNullOrEmpty(EmailError))
+                                        {
+                                            <div class="text-danger text-md-start">@EmailError</div>
+                                        }
                                     </div>
 
                                     <div class="form-group floating-label mt-3">
-                                        <MudTextField Class="input-fields" Label="Password" @bind-Value="@LoginUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => LoginUser.Password)"></MudTextField>
+                                        <MudTextField Class="input-fields" Label="Password" @bind-Value="@LoginUser.Password" Required="true" RequiredError="Password is required" InputType="InputType.Password" For="@(() => LoginUser.Password)">
+                                            <ValidationMessage For="@(() => LoginUser.Password)" />
+                                        </MudTextField>
+                                        @if (!string.IsNullOrEmpty(PasswordError))
+                                        {
+                                            <div class="text-danger text-md-start">@PasswordError</div>
+                                        }
                                     </div>
 
                                     <div class="form-group align-center mt-4">
-                                        <button class=" btn-account px-5 py-2" type="submit">Sign In</button>
+                                        <button class=" btn-account px-2 py-2" type="submit">Sign In</button>
                                     </div>
                                 </EditForm>
                             </div>
                             <div class="row d-flex">
-                                <p class="small mt-2"><a href="#!">Forgot password?</a></p>
+                                <p class="small mt-2"><a href="/forgot-password">Forgot password?</a></p>
                                 <p>
                                     Don't have an account? <a href="/auth/register-account" class="text-decoration-underline">Create an account</a>
                                 </p>
@@ -76,6 +88,8 @@ else
     private LoginUser LoginUser = new LoginUser();
     private string errorMessage = string.Empty;
     private string returnUrl = string.Empty;
+    private string EmailError = string.Empty;
+    private string PasswordError = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -105,8 +119,10 @@ else
     {
         Console.WriteLine("Form SUbmit clicked...");
         IsLoading = true;
+        EmailError = string.Empty;
+        PasswordError = string.Empty;
         var result = await AuthService.UserLogin(LoginUser);
-        if(result != null)
+        if (result != null && result.StatusCode == 200 && !string.IsNullOrWhiteSpace(result.Data))
         {
             var token = result.Data;
             var userRoles = result.Items;
@@ -114,59 +130,87 @@ else
 
             Dispatcher.Dispatch(new LoginAction(token, userDetail.UserName, userDetail.Email, userRoles));
 
-            if (result.Status == "Success" && result.StatusCode == 200)
+            NotificationService.Notify(new NotificationModel
+                {
+                    Icon = Icons.Material.Outlined.CheckCircle,
+                    Title = "Success",
+                    Message = result?.Message,
+                    Type = NotificationMessageType.Success,
+                    Duration = 5000
+                });
+
+            if (!string.IsNullOrWhiteSpace(returnUrl))
             {
-
-                NotificationService.Notify(new NotificationModel
-                    {
-                        Message = "Logged in successfully",
-                        Type = NotificationMessageType.Success
-                    });
-
-                if (!string.IsNullOrWhiteSpace(returnUrl))
-                {
-                    NavigationManager.NavigateTo(returnUrl);
-                }
-                else
-                {
-                    if (userRoles.Contains("Admin"))
-                    {
-                        NavigationManager.NavigateTo("/admin/dashboard");
-                    }
-                    else if (userRoles.Contains("User"))
-                    {
-                        NavigationManager.NavigateTo("/products");
-                    }
-                    else
-                    {
-                        // Handle other roles or unexpected scenarios
-                        NotificationService.Notify(new NotificationModel
-                        {
-                            Message = "Unauthorized access",
-                            Type = NotificationMessageType.Error
-                        });
-                    }
-                }
+                NavigationManager.NavigateTo(returnUrl);
             }
             else
             {
-                NotificationService.Notify(new NotificationModel
-                    {
-                        Message = result.Message,
-                        Type = NotificationMessageType.Error
-                    });
+                if (userRoles.Contains("Admin"))
+                {
+                    NavigationManager.NavigateTo("/admin/dashboard");
+                    StateHasChanged();
+
+                }
+                else if (userRoles.Contains("User"))
+                {
+                    NavigationManager.NavigateTo("/products");
+                    StateHasChanged();
+
+                }
+                else
+                {
+                    // Handle other roles or unexpected scenarios
+                    NotificationService.Notify(new NotificationModel
+                        {
+                            Icon = Icons.Material.Outlined.Warning,
+                            Title = "Warning",
+                            Message = "Unauthorized access",
+                            Type = NotificationMessageType.Warning,
+                            Duration = 5000
+                        });
+                }
             }
         }
-        else
+        else if (result.StatusCode == 404)
+        {
+            // Display a toast notification if the user does not exist
+            NotificationService.Notify(new NotificationModel
+                {
+                    Icon = Icons.Material.Outlined.Warning,
+                    Title = "Warning",
+                    Message = result.Message,
+                    Type = NotificationMessageType.Warning,
+                    Duration = 5000
+                });
+            IsLoading = false;
+        }
+        else if (result.StatusCode == 401)
+        {
+
+            PasswordError = "The password you entered is incorrect. Please try again.";
+            IsLoading = false;
+            NotificationService.Notify(new NotificationModel
+                {
+                    Icon = Icons.Material.Outlined.Warning,
+                    Title = "Warning",
+                    Message = result.Message,
+                    Type = NotificationMessageType.Warning,
+                    Duration = 5000
+                });
+        }
+        else if (result.StatusCode == 500)
         {
             NotificationService.Notify(new NotificationModel
                 {
-                    Message = "Internal Server error",
-                    Type = NotificationMessageType.Error
+                    Icon = Icons.Material.Outlined.Error,
+                    Title = "Error",
+                    Message = "Internal Server Error. Please try again later.",
+                    Type = NotificationMessageType.Error,
+                    Duration = 5000
                 });
-        }
 
-        StateHasChanged();
+            IsLoading = false;
+        }
 
     }
 

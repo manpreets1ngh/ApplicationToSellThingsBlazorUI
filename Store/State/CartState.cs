@@ -10,4 +10,7 @@ public class CartState
         Items = items;
     }
 
+    // Property to return the initial state of the Cart
+    public static CartState InitialCartState => new CartState(new List<CartItem>());
+
 }

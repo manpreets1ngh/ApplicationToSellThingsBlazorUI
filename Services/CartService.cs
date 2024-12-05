@@ -4,12 +4,15 @@ using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 using ApplicationToSellThings.BlazorUI.Store.Action.CartActions;
 using ApplicationToSellThings.BlazorUI.Store.State;
 using Fluxor;
+using Microsoft.AspNetCore.Components;
 
 namespace ApplicationToSellThings.BlazorUI.Services
 {
     public class CartService : ICartService
     {
-        private readonly IState<CartState> _cartState;
+        [Inject]
+        public IState<CartState> _cartState { get; set; }
+
         private readonly IDispatcher _dispatcher;
 
         public CartService(IState<CartState> cartState, IDispatcher dispatcher)
@@ -51,6 +54,7 @@ namespace ApplicationToSellThings.BlazorUI.Services
                     product.Price,
                     1
                 )));
+
             }
         }
 

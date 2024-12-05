@@ -8,6 +8,6 @@ namespace ApplicationToSellThings.BlazorUI.Store.Features
     {
         public override string GetName() => "Cart";
 
-        protected override CartState GetInitialState() => new CartState(new List<CartItem>());
+        protected override CartState GetInitialState() => CartState.InitialCartState;
     }
 }

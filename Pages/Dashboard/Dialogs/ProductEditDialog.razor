@@ -2,7 +2,7 @@
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces;
 @inject IProductsService ProductService
 
-<MudDialog Style="background-color: #F4F4F4; border-radius: 15px;">
+<MudDialog Style="background-color: #F4F4F4; border-radius: 10px;">
     <DialogContent>
 
         <MudForm>
@@ -41,6 +41,7 @@
     [Parameter] public Product Product { get; set; }
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     private string UploadedFileName;
+
 
     private string ProductIdString
     {

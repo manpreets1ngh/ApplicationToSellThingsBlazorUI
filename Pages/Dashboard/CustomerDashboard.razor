@@ -1,0 +1,145 @@
+﻿@page "/user/dashboard"
+@using ApplicationToSellThings.BlazorUI.Helper
+@using ApplicationToSellThings.BlazorUI.Models
+@using ApplicationToSellThings.BlazorUI.Models.Orders
+@using ApplicationToSellThings.BlazorUI.Services
+@using ApplicationToSellThings.BlazorUI.Services.Interfaces
+@inject IOrderService OrderService
+@inject IAddressService AddressService
+@inject IState<AuthState> AuthState
+@inject UserDetailHelper UserHelper
+@inject NotificationService Notification
+
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="profile-container">
+    <MudGrid>
+        <MudItem xs="3">
+            <MudPaper Class="sidebar">
+                <MudAvatar Icon="@Icons.Material.Filled.AccountCircle" Size="Size.Large" Class="avatar" />
+                <MudText Typo="Typo.h6" Class="p-3">@FormatUserName(UserInfo.UserName)</MudText>
+
+                <MudDivider Class="my-2" />
+
+                <MudNavMenu>
+                    <MudNavLink Icon="@Icons.Material.Filled.AccountBox" OnClick="@(() => NavigateTo("AccountOverview"))">Account Overview</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.AccountBox" OnClick="@(() => NavigateTo("MyProfile"))">My Profile</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.LocationOn" OnClick="@(() => NavigateTo("DeliveryAddress"))">Delivery Address</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.ShoppingCart" OnClick="@(() => NavigateTo("MyOrders"))">My Orders</MudNavLink>
+                    <MudNavLink Icon="@Icons.Material.Filled.Favorite" OnClick="@(() => NavigateTo("MyWishlist"))">My Wishlist</MudNavLink>
+                </MudNavMenu>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="9">
+            <MudGrid>
+                @if (SelectedComponent == "AccountOverview")
+                {
+                    @foreach (var product in Products)
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Class="product-card">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body1">@product.Name</MudText>
+                                    <MudText Typo="Typo.h5" Color="Color.Primary">@product.Price</MudText>
+                                    <MudSelect Label="Select Option" @bind-Value="@product.SelectedOption">
+                                        @foreach (var option in product.Options)
+                                        {
+                                            <MudSelectItem Value="@option">@option</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                    <MudNumericField T="int" Label="Quantity" Min="1" Max="10" @bind-Value="@product.Quantity" />
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2">Add to cart</MudButton>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                }
+                else if (SelectedComponent == "MyProfile")
+                {
+                    <MyProfileComponent />
+                }
+                else if (SelectedComponent == "DeliveryAddress")
+                {
+                    @* <DeliveryAddressComponent /> *@
+                }
+                else if (SelectedComponent == "MyOrders")
+                {
+                    @* <MyOrdersComponent /> *@
+                }
+                else if (SelectedComponent == "MyWishlist")
+                {
+                    @* <MyWishlistComponent /> *@
+                }
+            </MudGrid>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private List<Product> Products = new List<Product>
+    {
+        new Product { Name = "Wrist Watch", Price = "$500", Options = new List<string> { "With Box", "Without Box" }, Quantity = 1 },
+        new Product { Name = "Alarm Clock", Price = "$450", Options = new List<string> { "White / With Battery", "Black / Without Battery" }, Quantity = 1 },
+        new Product { Name = "Black Wired Headphones", Price = "$700", Options = new List<string> { "With Mic", "Without Mic" }, Quantity = 1 }
+    };
+
+    public class Product
+    {
+        public string Name { get; set; }
+        public string Price { get; set; }
+        public List<string> Options { get; set; }
+        public int Quantity { get; set; }
+        public string SelectedOption { get; set; }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    private string errorMessage = string.Empty;
+    private List<Order> OrdersList { get; set; }
+    private OrderDetail OrderDetail { get; set; }
+    private UserDetail UserInfo { get; set; }
+    private Product ProductDetail { get; set; }
+    private List<AddressViewModel> UserAddresses { get; set; } = new List<AddressViewModel>();
+    private bool _loading;
+    private Guid userId;
+    private string productName;
+    private string SelectedComponent { get; set; } = "AccountOverview";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.Value.IsAuthenticated)
+        {
+            UserInfo = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+            userId = Guid.Parse(UserInfo.Id);
+            var fetchedOrders = await OrderService.GetOrdersListForUser(userId);
+            // Fetch addresses for the user
+            UserAddresses = await AddressService.GetAddressByUser(userId);
+            if (fetchedOrders != null)
+            {
+                OrdersList = fetchedOrders
+                .OrderByDescending(order => order.OrderCreatedAt)
+                .ToList();
+            }
+            else
+            {
+                OrdersList = new List<Order>(); // Initialize to avoid null reference
+            }
+        }
+    }
+
+    private void NavigateTo(string componentName)
+    {
+        SelectedComponent = componentName;
+    }
+
+    private string FormatUserName(string userName)
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return userName;
+        }
+
+        return System.Text.RegularExpressions.Regex.Replace(userName, "(\\B[A-Z])", " $1");
+    }
+}

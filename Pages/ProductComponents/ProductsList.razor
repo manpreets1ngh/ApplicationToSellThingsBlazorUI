@@ -24,7 +24,7 @@ else
                 <MudItem xs="12">
                     <div class="row">
                         <MudText Class="mb-4" Typo="Typo.h6">Products</MudText>
-                        <MudTable Items="@products" Hover="true" Style="background-color: #F4F4F4; border-radius: 15px; margin-right: 10px; background-color: #F4F4F4;
+                        <MudTable Items="@products" Hover="true" Style="background-color: #F4F4F4; border-radius: 10px; margin-right: 10px; background-color: #F4F4F4;
                             box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
                             0 2px 3px rgba(27, 18, 9);
                             transition: box-shadow 0.3s ease-in-out;">
@@ -75,7 +75,7 @@ else
                                 }
                                 <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>                                
                                 <MudTd DataLabel="Edit">
-                                    <MudButton Variant="Variant.Outlined" Class="rounded-3" Color="Color.Tertiary" OnClick="() => OpenEditDialog(context)">Edit</MudButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Title="Edit" Color="Color.Default" OnClick="() => OpenEditDialog(context)"></MudIconButton>
                                 </MudTd>
                             </RowTemplate>
                         </MudTable>

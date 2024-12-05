@@ -1,136 +1,153 @@
 ﻿@page "/admin/dashboard"
+@using ApplicationToSellThings.BlazorUI.Models
 @using ApplicationToSellThings.BlazorUI.Models.AdminPanel
 @using ApplicationToSellThings.BlazorUI.Models.Orders
 @using ApplicationToSellThings.BlazorUI.Pages.Dashboard.Dialogs
+@using ApplicationToSellThings.BlazorUI.Services
 @using ApplicationToSellThings.BlazorUI.Services.Interfaces
 @inject IDashboardService DashboardService
 @inject IOrderService OrderService
 @inject IDialogService DialogService
+@inject IState<AuthState> AuthState
+@inject NavigationManager NavigationManager
+@inject NotificationService Notification
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-3">
-    <MudGrid>
-        <!-- Header Section -->
-        <MudItem xs="12">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h4">Dashboard Overview</MudText>
-                    <MudText Typo="Typo.subtitle1" Class="mb-4">Your quick overview of key metrics</MudText>
-                    <MudDivider Class="mb-4"/>
-                    <MudButton Color="Color.Primary" Variant="Variant.Outlined" Class="mr-2" @onclick="FetchAnnualData">Annual Data</MudButton>
-                    <MudDatePicker T="DateTime?" Picker="Picker.Month" @bind-Date="selectedMonth" DateFormat="MMMM yyyy" Variant="Variant.Outlined" Label="Select Month" @onchange="OnMonthChanged"/>
+@if (!AuthState.Value.IsAuthenticated)
+{
+    <p>You are not authorized to access this content. Please log in.</p>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-3">
+        <MudGrid>
+            <!-- Header Section -->
+            <MudItem xs="12">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h4">Dashboard Overview</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="mb-4">Your quick overview of key metrics</MudText>
+                        <MudDivider Class="mb-4" />
+                        <MudButton Color="Color.Primary" Variant="Variant.Outlined" Class="mr-2" @onclick="FetchAnnualData">Annual Data</MudButton>
+                        <MudDatePicker T="DateTime?" Picker="Picker.Month" @bind-Date="selectedMonth" DateFormat="MMMM yyyy" Variant="Variant.Outlined" Label="Select Month" @onchange="OnMonthChanged" />
+                    </div>
                 </div>
-            </div>
-        </MudItem>
-        
-        <!-- Metrics Cards -->  
-        <MudItem xs="12" sm="6" md="2">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Total Sales</MudText>
-                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalSales.ToString("C")</MudText>
-                </div>
-            </div>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Total Orders</MudText>
-                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalOrders</MudText>
-                </div>
-            </div>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Total Customers</MudText>
-                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalCustomers</MudText>
-                </div>
-            </div>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="2">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Total Revenue</MudText>
-                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalRevenue.ToString("C")</MudText>
-                </div>
-            </div>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Total Products</MudText>
-                    <MudText Typo="Typo.h5">@dashboardMetrics.TotalProducts</MudText>
-                </div>
-            </div>
-        </MudItem>
+            </MudItem>
 
-        <!-- Charts Section -->
-        <MudItem xs="12" md="6">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Sales Trends</MudText>
-                    <!-- Add your Sales Trends Chart here -->
-                    <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+            <!-- Metrics Cards -->
+            <MudItem xs="12" sm="6" md="2">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Total Sales</MudText>
+                        <MudText Typo="Typo.h5">@dashboardMetrics.TotalSales.ToString("C")</MudText>
+                    </div>
                 </div>
-            </div>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Revenue Trends</MudText>
-                    <!-- Add your Revenue Trends Chart here -->
-                    <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })"/>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Total Orders</MudText>
+                        <MudText Typo="Typo.h5">@dashboardMetrics.TotalOrders</MudText>
+                    </div>
                 </div>
-            </div>
-        </MudItem>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Total Customers</MudText>
+                        <MudText Typo="Typo.h5">@dashboardMetrics.TotalCustomers</MudText>
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Total Revenue</MudText>
+                        <MudText Typo="Typo.h5">@dashboardMetrics.TotalRevenue.ToString("C")</MudText>
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Total Products</MudText>
+                        <MudText Typo="Typo.h5">@dashboardMetrics.TotalProducts</MudText>
+                    </div>
+                </div>
+            </MudItem>
 
-        <!-- Recent Activity Section -->
-        <MudItem xs="12">
-            <div class="row">
-                <MudText Class="mb-4" Typo="Typo.h6">Recent Orders</MudText>
-                <MudTable Items="@dashboardMetrics.RecentOrders" Hover="true" Style="background-color: #F4F4F4; border-radius: 15px; margin-right: 10px; background-color: #F4F4F4;
+            <!-- Charts Section -->
+            <MudItem xs="12" md="6">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Sales Trends</MudText>
+                        <!-- Add your Sales Trends Chart here -->
+                        <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })" />
+                    </div>
+                </div>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Revenue Trends</MudText>
+                        <!-- Add your Revenue Trends Chart here -->
+                        <MudChart ChartType="ChartType.Bar" Data="@dashboardMetrics.SalesTrends" Options="@(new { Responsive = true, MaintainAspectRatio = false })" />
+                    </div>
+                </div>
+            </MudItem>
+
+            <!-- Recent Activity Section -->
+            <MudItem xs="12">
+                <div class="row">
+                    <MudText Class="mb-4" Typo="Typo.h6">Recent Orders</MudText>
+                    <MudTable Items="@dashboardMetrics.RecentOrders" Hover="true" Style="background-color: #F4F4F4; border-radius: 15px; margin-right: 10px; background-color: #F4F4F4;
     box-shadow: 0 2px 3px rgba(255, 255, 255, 70),
     0 2px 3px rgba(27, 18, 9);
     transition: box-shadow 0.3s ease-in-out;">
-                    <HeaderContent>
-                        <MudTh>Order Date</MudTh>
-                        <MudTh>Order Amount</MudTh>
-                        <MudTh>Payment Method</MudTh>
-                        <MudTh>Order Status</MudTh>
-                        <MudTh></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Order Date">@context.OrderCreatedAt</MudTd>
-                        <MudTd DataLabel="Order Amount">@context.TotalAmount.ToString("C")</MudTd>
-                        <MudTd DataLabel="Order Amount">@context.PaymentMethod</MudTd>
-                        <MudTd DataLabel="Status">@context.OrderStatus</MudTd>
-                        <MudTd DataLabel="Edit">
-                            <MudButton Variant="Variant.Outlined" Class="rounded-3" Color="Color.Default" OnClick="() => OpenEditDialog(context)">Edit</MudButton>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </div>
-        </MudItem>
-        <MudItem xs="12">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Recent Customer Sign-Ups</MudText>
-                    <!-- Add your Recent Customer Sign-Ups List here -->
+                        <HeaderContent>
+                            <MudTh>Order Number</MudTh>
+                            <MudTh>Order Date</MudTh>
+                            <MudTh>Order Amount</MudTh>
+                            <MudTh>Payment Method</MudTh>
+                            <MudTh>Order Status</MudTh>
+                            <MudTh>Delivery Status</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Order Number">@context.OrderNumber</MudTd>
+                            <MudTd DataLabel="Order Date">@context.OrderCreatedAt</MudTd>
+                            <MudTd DataLabel="Order Amount">@context.TotalAmount.ToString("C")</MudTd>
+                            <MudTd DataLabel="Order Amount">@context.PaymentMethod</MudTd>
+                            <MudTd DataLabel="Status">@context.OrderStatus</MudTd>
+                            <MudTd DataLabel="Status">@context.ShippingInfo.DeliveryStatus.Name</MudTd>
+                            <MudTd DataLabel="Edit">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Title="Edit" Color="Color.Default" @onclick="() => OpenEditDialog(context)" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
                 </div>
-            </div>
-        </MudItem>
+            </MudItem>
+            <MudItem xs="12">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Recent Customer Sign-Ups</MudText>
+                        <!-- Add your Recent Customer Sign-Ups List here -->
+                    </div>
+                </div>
+            </MudItem>
 
-        <!-- Notifications Section -->
-        <MudItem xs="12">
-            <div class="card">
-                <div class="card-body">
-                    <MudText Typo="Typo.h6">Notifications</MudText>
-                    <!-- Add your Notifications Panel here -->
+            <!-- Notifications Section -->
+            <MudItem xs="12">
+                <div class="card">
+                    <div class="card-body">
+                        <MudText Typo="Typo.h6">Notifications</MudText>
+                        <!-- Add your Notifications Panel here -->
+                    </div>
                 </div>
-            </div>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
 
 @code {
     
@@ -140,10 +157,48 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Check if the user is authenticated
+        if (!AuthState.Value.IsAuthenticated)
+        {
+            // Notify the user that they need to log in
+            Notification.Notify(new NotificationModel
+                {
+                    Title = "Access Denied",
+                    Message = "You must be logged in to access this page.",
+                    Type = NotificationMessageType.Warning,
+                    Duration = 5000
+                });
+
+            await Task.Delay(5000); // Give the user time to read the notification
+            // Redirect to the login page
+            NavigationManager.NavigateTo("/auth/login");
+            return;
+        }
+
+        if (AuthState.Value.UserRoles == null || !AuthState.Value.UserRoles.Contains("Admin"))
+        {
+            // Notify the user they don't have access
+            Notification.Notify(new NotificationModel
+                {
+                    Title = "Access Denied",
+                    Message = "You do not have the necessary permissions to access this page.",
+                    Type = NotificationMessageType.Warning,
+                    Duration = 5000
+                });
+
+            await Task.Delay(5000); // Give the user time to read the notification
+            // Redirect to the Access Denied page
+            NavigationManager.NavigateTo("/auth/accessdenied");
+            return;
+        }
+
+        // If the user is authenticated and has the correct role, proceed with fetching data
         await FetchAnnualData();
-        var recentorders = await DashboardService.GetRecentOrdersAsync(5);
-        dashboardMetrics.RecentOrders = recentorders;
-        StateHasChanged();
+
+        var recentOrders = await DashboardService.GetRecentOrdersAsync(5);
+        dashboardMetrics.RecentOrders = recentOrders;
+
+        StateHasChanged();       
     }
 
     private async Task FetchAnnualData()

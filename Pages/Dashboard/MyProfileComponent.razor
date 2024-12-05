@@ -1,0 +1,43 @@
+﻿@page "/myprofile"
+@using ApplicationToSellThings.BlazorUI.Helper
+@using ApplicationToSellThings.BlazorUI.Models
+@using Microsoft.AspNetCore.Identity
+@inject IState<AuthState> AuthState
+@inject UserDetailHelper UserHelper
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudText Typo="Typo.h6" Class="p-4"> My Details</MudText>
+    <MudText Typo="Typo.body1" Class="p-3">@UserName</MudText>
+    <MudText Typo="Typo.body1"></MudText>
+    <MudText Typo="Typo.body1"></MudText>
+    <MudText Typo="Typo.body1"></MudText>
+</MudContainer>
+
+@code{
+    private string FirstName { get; set; }
+    private string LastName { get; set; }
+    private string Email { get; set; }
+    private string UserName { get; set; }
+    private UserDetail UserInfo { get; set; }
+    private string userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if(AuthState.Value.IsAuthenticated)
+        {
+            await LoadUserDetails();
+        }
+    }
+
+    private async Task LoadUserDetails()
+    {
+        UserInfo = UserHelper.GetUserDetailFromToken(AuthState.Value.Token);
+        userId = UserInfo.Id;
+
+        if (!string.IsNullOrEmpty(userId))
+            {
+                UserName = UserInfo.UserName;
+                Email = UserInfo.Email;
+            }
+    }
+}

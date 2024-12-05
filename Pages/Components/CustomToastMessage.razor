@@ -1,0 +1,126 @@
+﻿@using MudBlazor
+@inject ISnackbar Snackbar
+
+
+<div class="custom-snackbar" style="border-left: 5px solid @GetBorderColor(Severity)">
+    <MudIcon Icon="@Icon" Class="@GetIconClass(Severity)" />
+    <div class="custom-snackbar-content">
+        <div class="custom-snackbar-title" style="color:@GetTitleColor(Severity)">@Title</div>
+        <div class="custom-snackbar-message">@Message</div>
+    </div>
+    <MudIcon Icon="@Icons.Material.Filled.Close" Class="custom-snackbar-close-icon" @onclick="CloseSnackbar" />
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; }
+    [Parameter] public string Message { get; set; }
+    [Parameter] public string Icon { get; set; }
+    [Parameter] public Severity Severity { get; set; }
+
+    private void CloseSnackbar()
+    {
+        Snackbar.Clear();
+    }
+
+    private string GetTitleColor(Severity severity) =>
+        severity switch
+        {
+            Severity.Success => "#28a745", // Green for success
+            Severity.Error => "#dc3545", // Red for error
+            Severity.Warning => "#FF9800", // Orange for warning
+            Severity.Info => "#17a2b8", // Blue for info
+            _ => "#666666" // Default color
+        };
+
+
+    private string GetIconClassStyles(Severity severity) =>
+        severity switch
+        {
+            Severity.Success => "custom-snackbar-icon-success",
+            Severity.Error => "custom-snackbar-icon-error",
+            Severity.Warning => "custom-snackbar-icon-warning",
+            Severity.Info => "custom-snackbar-icon-info",
+            _ => "custom-snackbar-icon-default"
+        };
+
+    private string GetIconColor(Severity severity) => GetTitleColor(severity);
+
+    private string GetBorderColor(Severity severity) => GetTitleColor(severity);
+    private string GetIconClass(Severity severity) => GetIconClassStyles(severity);
+
+}
+
+<style>
+
+    /* Remove the default MudBlazor snackbar icon */
+    .mud-snackbar .mud-snackbar-icon {
+        display: none !important;
+    }
+
+    .custom-snackbar {
+        display: flex;
+        align-items: center;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        background-color: #ffffff !important; /* Set the background to white */
+        color: #333333 !important; /* Dark text */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Light shadow */
+    }
+
+    .custom-snackbar-icon {
+        font-size: 24px !important;
+        margin-right: 10px !important;
+        color: #FF9800 !important; /* Orange color for warning icon */
+    }
+
+    .custom-snackbar-content {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        margin-right: 10px;
+    }
+
+    .custom-snackbar-title {
+        font-weight: bold !important;
+    }
+
+    .custom-snackbar-message {
+        color: #666666 !important; /* Lighter text for the message */
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+
+    .mud-snackbar {
+        background-color: transparent !important; /* Ensures MudBlazor snackbar has no background */
+        box-shadow: none !important; /* Remove any shadow on the MudBlazor snackbar */
+    }
+
+    .custom-snackbar-close-icon {
+        font-size: 20px !important;
+        cursor: pointer;
+        color: #666666 !important; /* Slightly lighter color for the close icon */
+    }
+
+
+    /* Severity specific styles */
+    .custom-snackbar-icon-success {
+        color: #28a745 !important; /* Green for success */
+        margin: 0 10px 0 0;
+    }
+
+    .custom-snackbar-icon-error {
+        color: #dc3545 !important; /* Red for error */
+        margin: 0 10px 0 0;
+    }
+
+    .custom-snackbar-icon-warning {
+        color: #FF9800 !important; /* Orange for warning */
+        margin: 0 10px 0 0;
+    }
+
+    .custom-snackbar-icon-info {
+        color: #17a2b8 !important; /* Blue for info */
+        margin: 0 10px 0 0;
+    }
+
+</style>
