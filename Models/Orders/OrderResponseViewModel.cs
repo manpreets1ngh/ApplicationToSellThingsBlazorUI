@@ -1,6 +1,4 @@
-﻿using ApplicationToSellThings.BlazorUI.Models.Products;
-
-namespace ApplicationToSellThings.BlazorUI.Models.Orders
+﻿namespace ApplicationToSellThings.BlazorUI.Models.Orders
 {
     public class OrderResponseViewModel
     {
@@ -12,5 +10,7 @@ namespace ApplicationToSellThings.BlazorUI.Models.Orders
         public int Quantity { get; set; }
         public List<OrderDetailResponseViewModel> OrderDetails { get; set; }
         public DateTime? OrderCreatedAt { get; set; }
+        public ShippingInfoModel ShippingDetails { get; set; }
+
     }
 }

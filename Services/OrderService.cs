@@ -38,6 +38,19 @@ namespace ApplicationToSellThings.BlazorUI.Services
                         TotalAmount = responseData.Data.TotalAmount,
                         Tax = responseData.Data.Tax,
                         OrderCreatedAt = responseData.Data.OrderCreatedAt,
+                        ShippingDetails = new ShippingInfoModel
+                        {
+                            ShippingInfoId = responseData.Data.ShippingDetails.ShippingInfoId,
+                            DeliveryStatusId = responseData.Data.ShippingDetails.DeliveryStatusId,
+                            EstimatedDeliveryDate = responseData.Data.ShippingDetails.EstimatedDeliveryDate,
+                            DeliveryStatus = new StatusModel
+                            {
+                                Id = responseData.Data.ShippingDetails.DeliveryStatusId,
+                                Name = responseData.Data.ShippingDetails.DeliveryStatus.Name,
+                                Alias = responseData.Data.ShippingDetails.DeliveryStatus.Alias,
+                                Type = responseData.Data.ShippingDetails.DeliveryStatus.Type
+                            }
+                        },
                         OrderDetails = responseData.Data.OrderDetails.Select(od => new OrderDetailResponseViewModel
                         {
                             ProductId = od.ProductId,
